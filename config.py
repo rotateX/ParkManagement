@@ -11,7 +11,7 @@ class Config:
     '''
     DEBUG = False
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'park'
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://parkuser:park2019@127.0.0.1:3306/myflask'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://parkuser:park2019@127.0.0.1:3306/parkmanagement'
     SQLALCHEMY_TRACK_MODIFICATIONS = 'False'
 
 class ProductionConfig(Config):
@@ -19,7 +19,7 @@ class ProductionConfig(Config):
     正式生产环境
     '''
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'propark'
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://parkuser:park2019@127.0.0.1:3306/myflask'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://parkuser:park2019@localhost:3306/parkmanagement'
 
 
 class DevelopmentConfig(Config):

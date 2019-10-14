@@ -8,6 +8,7 @@ from parkapi.views import parkapi
 from exts import db
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
+from parksys.models import *
 
 
 app = Flask(
@@ -33,7 +34,7 @@ db.init_app(app)
 @app.route('/')
 def hello_world():
 
-    return render_template('blog/index.html')
+    return render_template('parksys/base.html')
 
 if __name__ == '__main__':
     # app.run()
