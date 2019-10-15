@@ -1,0 +1,61 @@
+{% extends 'parksys/base.html' %}
+{% block stylesheet %}
+    <!-- DataTables -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">停车场信息</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <div class="col-md-1">
+                        <ul class="list-inline">
+                            <li><a href="{{ url_for('parksys.newpark') }}"><button type="button" class="btn btn-block btn-default">添加</button></a></li>
+                            <li><a href="#"><button type="button" class="btn btn-block btn-default">修改</button></a></li>
+                            <li><a href="#"><button type="button" class="btn btn-block btn-default">删除</button></a></li>
+                        </ul>
+                    </div>
+
+                    <table id="example1" class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>名称</th>
+                            <th>地址</th>
+                            <th>联系人</th>
+                            <th>类型</th>
+                            <th>状态</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+{% endblock %}
+
+{% block script %}
+    <!-- DataTables -->
+    <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
+    <!-- page script -->
+    <script>
+        $(document).ready(function () {
+            var dataSet = {{ dataSet | tojson }};
+            $('#example1').DataTable({
+                data: dataSet,
+                "pagingType": "full_numbers",
+                "language": {"url":"{{ url_for('static', filename='plugins/datatables/language.json') }}"},
+            });
+        });
+    </script>
+{% endblock %}

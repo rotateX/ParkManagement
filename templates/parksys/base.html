@@ -17,6 +17,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <link rel="stylesheet" href="{{ url_for('static' , filename='dist/css/adminlte.min.css') }}">
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+    {% block stylesheet %}
+
+    {% endblock %}
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
@@ -29,7 +32,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="index3.html" class="nav-link">Home</a>
+                <a href="newpark.html" class="nav-link">Home</a>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
                 <a href="#" class="nav-link">Contact</a>
@@ -149,7 +152,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <!-- Main Sidebar Container -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <!-- Brand Logo -->
-        <a href="index3.html" class="brand-link">
+        <a href="newpark.html" class="brand-link">
             <img src="{{ url_for('static', filename='dist/img/AdminLTELogo.png') }}" alt="AdminLTE Logo"
                  class="brand-image img-circle elevation-3"
                  style="opacity: .8">
@@ -165,7 +168,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                          class="img-circle elevation-2" alt="User Image">
                 </div>
                 <div class="info">
-                    <a href="#" class="d-block">Alexander Pierce</a>
+                    <a href="#" class="d-block">这是昵称</a>
                 </div>
             </div>
 
@@ -176,8 +179,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     <!-- Add icons to the links using the .nav-icon class
                     with font-awesome or any other icon font library -->
                     <li class="nav-item">
-                        <a href="widgets.html" class="nav-link active">
-                            <i class="nav-icon fas fa-th"></i>
+                        <a href="{{ url_for('parksys.indexpage') }}" class="nav-link">
+                            <i class="nav-icon fas fa-home"></i>
                             <p>
                                 首页
                                 {#                                <span class="right badge badge-danger">New</span>#}
@@ -186,7 +189,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     </li>
                     <li class="nav-item has-treeview">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <i class="nav-icon fas fa-car"></i>
                             <p>
                                 停车场信息
                                 <i class="right fas fa-angle-left"></i>
@@ -194,7 +197,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="{{ url_for('parksys.getpark') }}" class="nav-link">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>停车场信息管理</p>
                                 </a>
@@ -215,7 +218,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     </li>
                     <li class="nav-item has-treeview">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <i class="nav-icon fas fa-hand-holding-usd"></i>
                             <p>
                                 财务管理
                                 <i class="right fas fa-angle-left"></i>
@@ -250,7 +253,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     </li>
                     <li class="nav-item has-treeview">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <i class="nav-icon fas fa-cogs"></i>
                             <p>
                                 系统管理
                                 <i class="right fas fa-angle-left"></i>
@@ -289,17 +292,19 @@ scratch. This page gets rid of all links and provides the needed markup only.
         <!-- Content Header (Page header) -->
         <div class="content-header">
             <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1 class="m-0 text-dark">Starter Page</h1>
-                    </div><!-- /.col -->
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="#">Home</a></li>
-                            <li class="breadcrumb-item active">Starter Page</li>
-                        </ol>
-                    </div><!-- /.col -->
-                </div><!-- /.row -->
+                {% block contentheader %}
+                    {#                <div class="row mb-2">#}
+                    {#                    <div class="col-sm-6">#}
+                    {#                        <h1 class="m-0 text-dark">Starter Page</h1>#}
+                    {#                    </div><!-- /.col -->#}
+                    {#                    <div class="col-sm-6">#}
+                    {#                        <ol class="breadcrumb float-sm-right">#}
+                    {#                            <li class="breadcrumb-item"><a href="#">Home</a></li>#}
+                    {#                            <li class="breadcrumb-item active">Starter Page</li>#}
+                    {#                        </ol>#}
+                    {#                    </div><!-- /.col -->#}
+                    {#                </div><!-- /.row -->#}
+                {% endblock %}
             </div><!-- /.container-fluid -->
         </div>
         <!-- /.content-header -->
@@ -307,69 +312,72 @@ scratch. This page gets rid of all links and provides the needed markup only.
         <!-- Main content -->
         <div class="content">
             <div class="container-fluid">
-                <div class="row">
-                    <div class="col-lg-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Card title</h5>
-
-                                <p class="card-text">
-                                    Some quick example text to build on the card title and make up the bulk of the
-                                    card's
-                                    content.
-                                </p>
-
-                                <a href="#" class="card-link">Card link</a>
-                                <a href="#" class="card-link">Another link</a>
-                            </div>
-                        </div>
-
-                        <div class="card card-primary card-outline">
-                            <div class="card-body">
-                                <h5 class="card-title">Card title</h5>
-
-                                <p class="card-text">
-                                    Some quick example text to build on the card title and make up the bulk of the
-                                    card's
-                                    content.
-                                </p>
-                                <a href="#" class="card-link">Card link</a>
-                                <a href="#" class="card-link">Another link</a>
-                            </div>
-                        </div><!-- /.card -->
-                    </div>
-                    <!-- /.col-md-6 -->
-                    <div class="col-lg-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="m-0">Featured</h5>
-                            </div>
-                            <div class="card-body">
-                                <h6 class="card-title">Special title treatment</h6>
-
-                                <p class="card-text">With supporting text below as a natural lead-in to additional
-                                    content.</p>
-                                <a href="#" class="btn btn-primary">Go somewhere</a>
-                            </div>
-                        </div>
-
-                        <div class="card card-primary card-outline">
-                            <div class="card-header">
-                                <h5 class="m-0">Featured</h5>
-                            </div>
-                            <div class="card-body">
-                                <h6 class="card-title">Special title treatment</h6>
-
-                                <p class="card-text">With supporting text below as a natural lead-in to additional
-                                    content.</p>
-                                <a href="#" class="btn btn-primary">Go somewhere</a>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- /.col-md-6 -->
-                </div>
-                <!-- /.row -->
-            </div><!-- /.container-fluid -->
+                {% block content %}
+                    {#                <div class="row">#}
+                    {#                    <div class="col-lg-6">#}
+                    {#                        <div class="card">#}
+                    {#                            <div class="card-body">#}
+                    {#                                <h5 class="card-title">Card title</h5>#}
+                    {##}
+                    {#                                <p class="card-text">#}
+                    {#                                    Some quick example text to build on the card title and make up the bulk of the#}
+                    {#                                    card's#}
+                    {#                                    content.#}
+                    {#                                </p>#}
+                    {##}
+                    {#                                <a href="#" class="card-link">Card link</a>#}
+                    {#                                <a href="#" class="card-link">Another link</a>#}
+                    {#                            </div>#}
+                    {#                        </div>#}
+                    {##}
+                    {#                        <div class="card card-primary card-outline">#}
+                    {#                            <div class="card-body">#}
+                    {#                                <h5 class="card-title">Card title</h5>#}
+                    {##}
+                    {#                                <p class="card-text">#}
+                    {#                                    Some quick example text to build on the card title and make up the bulk of the#}
+                    {#                                    card's#}
+                    {#                                    content.#}
+                    {#                                </p>#}
+                    {#                                <a href="#" class="card-link">Card link</a>#}
+                    {#                                <a href="#" class="card-link">Another link</a>#}
+                    {#                            </div>#}
+                    {#                        </div><!-- /.card -->#}
+                    {#                    </div>#}
+                    {#                    <!-- /.col-md-6 -->#}
+                    {#                    <div class="col-lg-6">#}
+                    {#                        <div class="card">#}
+                    {#                            <div class="card-header">#}
+                    {#                                <h5 class="m-0">Featured</h5>#}
+                    {#                            </div>#}
+                    {#                            <div class="card-body">#}
+                    {#                                <h6 class="card-title">Special title treatment</h6>#}
+                    {##}
+                    {#                                <p class="card-text">With supporting text below as a natural lead-in to additional#}
+                    {#                                    content.</p>#}
+                    {#                                <a href="#" class="btn btn-primary">Go somewhere</a>#}
+                    {#                            </div>#}
+                    {#                        </div>#}
+                    {##}
+                    {#                        <div class="card card-primary card-outline">#}
+                    {#                            <div class="card-header">#}
+                    {#                                <h5 class="m-0">Featured</h5>#}
+                    {#                            </div>#}
+                    {#                            <div class="card-body">#}
+                    {#                                <h6 class="card-title">Special title treatment</h6>#}
+                    {##}
+                    {#                                <p class="card-text">With supporting text below as a natural lead-in to additional#}
+                    {#                                    content.</p>#}
+                    {#                                <a href="#" class="btn btn-primary">Go somewhere</a>#}
+                    {#                            </div>#}
+                    {#                        </div>#}
+                    {#                    </div>#}
+                    {#                    <!-- /.col-md-6 -->#}
+                    {#                </div>#}
+                    <!-- /.row -->
+                    <!-- /.container-fluid -->
+                {% endblock %}
+            </div>
         </div>
         <!-- /.content -->
     </div>
@@ -405,5 +413,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <!-- AdminLTE App -->
 <script src="{{ url_for('static', filename='dist/js/adminlte.min.js') }}"></script>
+{% block script %}
+
+{% endblock %}
 </body>
 </html>

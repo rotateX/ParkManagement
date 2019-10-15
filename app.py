@@ -34,8 +34,8 @@ db.init_app(app)
 @app.route('/')
 def hello_world():
 
-    return render_template('parksys/base.html')
-
+    # return render_template('parksys/base.html')
+    return redirect(url_for('parksys.indexpage'))
 if __name__ == '__main__':
     # app.run()
     manager.run()

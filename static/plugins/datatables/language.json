@@ -1,0 +1,18 @@
+{
+  "sInfo": "当前显示第 _START_ 到第 _END_ 条，共 _TOTAL_ 条",
+  "sInfoFiltered": "(从_MAX_条筛选 )",
+  "sInfoEmpty": "共筛选到0条",
+  "sSearch": "搜索:",
+  "sLengthMenu": "每页显示 _MENU_ 条",
+  "sZeroRecords": "未筛选到相关内容",
+  "sLoadingRecords": "正在加载...",
+  "sProcessing": "正在获取数据，请稍候...",
+  "paginate": {
+    "sPrevious": "上一页",
+    "sNext": "下一页",
+    "first": "首页",
+    "last": "末页",
+    "next": "Next page",
+    "previous": "Previous page"
+  }
+}

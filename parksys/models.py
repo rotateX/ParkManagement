@@ -21,7 +21,7 @@ class ParkInfo(db.Model):
     name = db.Column(db.String(20), nullable=False, comment='停车场名字')
     contact = db.Column(db.String(10), comment='联系人')
     mobile = db.Column(db.String(15), comment='联系电话')
-    address = db.Column(db.String(20), nullable=False, comment='停车场地址')
+    address = db.Column(db.String(20), nullable=False, comment='停车场类型（0公共，1私人）')
     longitude = db.Column(db.DECIMAL(10, 7), nullable=False, comment='经度')
     latitude = db.Column(db.DECIMAL(10, 7), nullable=False, comment='纬度')
     type = db.Column(db.Integer, nullable=False, comment='停车场类型')
