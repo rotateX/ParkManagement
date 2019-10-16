@@ -1,40 +1,113 @@
 {% extends 'parksys/base.html' %}
+{% block contentheader %}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0 text-dark">停车场添加</h1>
+    </div><!-- /.col -->
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('parksys.getpark') }}">停车场信息</a></li>
+            <li class="breadcrumb-item active">停车场添加</li>
+        </ol>
+    </div><!-- /.col -->
+</div><!-- /.row -->
+{% endblock %}
 {% block content %}
     <div class="row">
+        <div class="col-md-3"></div>
         <div class="col-md-6">
-            <div class="card card-primary">
-                <div class="card-body">
-                    <div class="form-group">
-                        <label for="inputName">停车场名称</label>
-                        <input type="text" id="inputName" class="form-control">
+            <div class="card card-info">
+                <form class="form-horizontal" id="ParkForm">
+                    {{ dataform.csrf_token }}
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="inputName">停车场名称</label>
+{#                            <input type="text" id="inputName" class="form-control" name="inputName">#}
+                            {{ dataform.inputName }}
+                        </div>
+                        <div class="form-group">
+                            <label for="inputContact">联系人</label>
+{#                            <input type="text" id="inputContact" class="form-control">#}
+                            {{ dataform.inputContact }}
+                        </div>
+                        <div class="form-group">
+                            <label for="inputMobile">联系电话</label>
+{#                            <input type="text" id="inputMobile" class="form-control">#}
+                            {{ dataform.inputMobile }}
+                        </div>
+                        <div class="form-group">
+                            <label for="inputAddress">地址</label>
+{#                            <input type="text" id="inputAddress" class="form-control">#}
+                            {{ dataform.inputAddress }}
+                        </div>
+                        <div class="form-group">
+                            <label for="inputLongitude">经度</label>
+{#                            <input type="text" id="inputLongitude" class="form-control">#}
+                            {{ dataform.inputLongitude }}
+                        </div>
+                        <div class="form-group">
+                            <label for="inputLatitude">纬度</label>
+{#                            <input type="text" id="inputLatitude" class="form-control">#}
+                            {{ dataform.inputLatitude }}
+                        </div>
+                        <div class="form-group">
+                            <label for="inputType">类型</label>
+{#                            <select class="form-control custom-select" id="inputType">#}
+{#                                <option>合作</option>#}
+{#                                <option>私人</option>#}
+{#                            </select>#}
+                            {{ dataform.inputType }}
+                        </div>
+                        <div class="form-group">
+                            <label for="inputMonthlyParking">月卡车位</label>
+{#                            <input type="text" id="inputMonthlyParking" class="form-control">#}
+                            {{ dataform.inputMonthlyParking }}
+                        </div>
+                        <div class="form-group">
+                            <label for="inputChargingRules">收费规则</label>
+{#                            <textarea id="inputChargingRules" class="form-control" rows="4"></textarea>#}
+                            {{ dataform.inputChargingRules }}
+                        </div>
+                        <div class="form-group">
+                            <label for="inputParkRemarks">备注</label>
+{#                            <textarea id="inputParkRemarks" class="form-control" rows="3"></textarea>#}
+                            {{ dataform.inputParkRemarks }}
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="inputContact">联系人</label>
-                        <input type="text" id="inputContact" class="form-control">
+                    <!-- /.card-body -->
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-info" id="Submit">确定</button>
+                        <button type="submit" class="btn btn-default float-right"><a href="{{ url_for('parksys.getpark') }}">取消</a></button>
                     </div>
-                    <div class="form-group">
-                        <label for="inputMobile">联系人</label>
-                        <input type="text" id="inputContact" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="inputType">类型</label>
-                        <select class="form-control custom-select">
-                            <option>合作</option>
-                            <option>私人</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="inputClientCompany">Client Company</label>
-                        <input type="text" id="inputClientCompany" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="inputProjectLeader">Project Leader</label>
-                        <input type="text" id="inputProjectLeader" class="form-control">
-                    </div>
-                </div>
-                <!-- /.card-body -->
+                    <!-- /.card-footer -->
+                </form>
+
             </div>
             <!-- /.card -->
         </div>
+        <div class="col-md-3"></div>
     </div>
+{% endblock %}
+{% block script %}
+<script>
+
+$('#Submit').click(function() {
+    var park_data = $('#ParkForm').serialize();
+    $.ajax({
+        url: '{{ url_for('parksys.newpark') }}',
+        type: 'POST',
+        data: park_data,
+        dataType: 'json',
+        success: function (res) {
+            if (res['status'] === 'success') {
+                alert('创建成功');
+                window.location.href='{{ url_for('parksys.getpark') }}'
+            }else {
+                alert('失败');
+                console.log('failed')
+            }
+        }
+    })
+})
+</script>
 {% endblock %}
