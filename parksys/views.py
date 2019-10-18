@@ -1,7 +1,7 @@
 # -*- coding : utf-8 -*-
 
 from flask import Blueprint
-from flask import Flask, url_for, render_template, redirect, request
+from flask import Flask, url_for, render_template, redirect, request, flash
 from parksys.models import *
 from parksys.parkdataform import ParkDataForm
 
@@ -20,12 +20,12 @@ def indexpage():
 
 
 # 停车场信息页面
-@parksys.route('/parkinfo', methods=['GET', 'POST'])
+@parksys.route('/parkinfo', methods=['GET'])
 def getpark():
     dataSet = []
     parks = ParkInfo.query.all()
     for park in parks:
-        list = [park.name, park.address, park.contact, park.type, park.state]
+        list = [park.id, park.name, park.address, park.contact, park.type, park.state]
         dataSet.append(list)
     return render_template('parksys/parkinfo.html', dataSet=dataSet)
 
@@ -33,16 +33,22 @@ def getpark():
 @parksys.route('/newpark', methods=['GET', 'POST'])
 def newpark():
     dataform = ParkDataForm()
-    res = {'status': 'failed'}
+    res = {}
     if request.method == 'POST':
         if dataform.validate_on_submit():
             res['status'] = 'success'
             name = dataform.inputName.data
+            request.get_data('id')
             address = dataform.inputAddress.data
             print(name, address)
-            print('test')
-            return res
-    return render_template('parksys/newpark.html', dataform=dataform)
+            flash('创建成功')
+            return redirect(url_for('getpark'))
+        else:
+            res['status'] = 'failed'
+            flash('创建失败')
+    else:
+        return render_template('parksys/newpark.html', dataform=dataform)
+
 
 # # 停车场信息保存
 # @parksys.route('/savepark', methods=['POST'])
@@ -54,3 +60,25 @@ def newpark():
 #         res['status'] = 'success'
 #         return res
 
+# 删除停车场
+@parksys.route('/delpark', methods=['POST'])
+def delpark():
+    res = {}
+    parkid = request.get_data()
+    park = ParkInfo.query.get(parkid)
+    if park:
+        park.state = 0
+        db.session.commit()
+        res['status'] = 'success'
+    else:
+        res['status'] = 'failed'
+    return res
+
+# 修改停车场信息
+@parksys.route('/updatepark', methods=['GET', 'POST'])
+def updatepark(park_id):
+    park = ParkInfo.query.get(park_id)
+    if park:
+        return render_template('parksys/updatepark.html', park=park)
+    else:
+        pass

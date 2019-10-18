@@ -2,12 +2,12 @@
 {% block contentheader %}
 <div class="row mb-2">
     <div class="col-sm-6">
-        <h1 class="m-0 text-dark">停车场添加</h1>
+        <h1 class="m-0 text-dark">停车场修改</h1>
     </div><!-- /.col -->
     <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="{{ url_for('parksys.getpark') }}">停车场信息</a></li>
-            <li class="breadcrumb-item active">停车场添加</li>
+            <li class="breadcrumb-item active">停车场修改</li>
         </ol>
     </div><!-- /.col -->
 </div><!-- /.row -->
@@ -16,17 +16,6 @@
     <div class="row">
         <div class="col-md-3"></div>
         <div class="col-md-6">
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    <ul class="flash">
-                        {% for message in messages %}
-                            <div class="alert alert-success" style="text-align: center">
-                                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
-                                <strong>{{ message }}</strong></div>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
             <div class="card card-info">
                 <form class="form-horizontal" id="ParkForm">
                     {{ dataform.csrf_token }}
@@ -103,24 +92,5 @@
 {% block script %}
 <script>
 
-$('#Submit').click(function() {
-    var park_data = $('#ParkForm').serialize();
-    console.log(park_data);
-    $.ajax({
-        url: '{{ url_for('parksys.newpark') }}',
-        type: 'POST',
-        data: park_data,
-        dataType: 'json',
-        success: function (res) {
-            if (res['status'] === 'success') {
-                alert('创建成功');
-                window.location.href='{{ url_for('parksys.getpark') }}'
-            }else {
-                alert('失败');
-                console.log('failed')
-            }
-        }
-    })
-})
 </script>
 {% endblock %}

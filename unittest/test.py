@@ -20,13 +20,13 @@ class DatabaseTest(unittest.TestCase):
     def test_create_park(self):
         park = ParkInfo(
             id=str(uuid.uuid4()),
-            name='测试停车场4',
+            name='xxpark',
             address='厦门市思明区观日路03号',
             longitude='118.185422',
             latitude='24.492036',
             type='1',
             create_by='admin',
-            state='1',
+            state=0,
         )
         db.session.add(park)
         db.session.commit()

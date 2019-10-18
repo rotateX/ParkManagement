@@ -1,8 +1,9 @@
 {% extends 'parksys/base.html' %}
 {% block stylesheet %}
     <!-- DataTables -->
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-select/css/select.bootstrap4.css') }}">
+
 {% endblock %}
 {% block contentheader %}
 <div class="row mb-2">
@@ -30,13 +31,16 @@
                     <div class="col-md-12">
                         <ul class="list-inline">
                             <li style="display:inline-block"><a href="{{ url_for('parksys.newpark') }}"><button type="button" class="btn btn-block btn-default">添加</button></a></li>
-                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default">修改</button></a></li>
-                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default">删除</button></a></li>
+                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" onclick="">修改</button></a></li>
+                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" onclick="getSels()">删除</button></a></li>
+                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default">导出</button></a></li>
+                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default">已删除</button></a></li>
                         </ul>
                     </div>
-                    <table id="example1" class="table table-bordered table-hover">
+                    <table id="parkdata" class="table table-bordered table-hover">
                         <thead>
                         <tr>
+                            <th>编号</th>
                             <th>名称</th>
                             <th>地址</th>
                             <th>联系人</th>
@@ -59,15 +63,47 @@
     <!-- DataTables -->
     <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.js') }}"></script>
     <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-select/js/dataTables.select.js') }}"></script>
     <!-- page script -->
     <script>
-        $(document).ready(function () {
-            var dataSet = {{ dataSet | tojson }};
-            $('#example1').DataTable({
-                data: dataSet,
-                "pagingType": "full_numbers",
-                "language": {"url":"{{ url_for('static', filename='plugins/datatables/language.json') }}"},
-            });
+        //$(document).ready(function () {
+        var dataSet = {{ dataSet | tojson }};
+        var table = $('#parkdata').DataTable({
+            select: 'single',
+            data: dataSet,
+            {#destroy: true,#}
+           'bAutoWidth': false,
+            "pagingType": "full_numbers",
+            "language": {"url":"{{ url_for('static', filename='plugins/datatables/language.json') }}"},
         });
+        //});
+        // 选择删除停车场
+        function getSels() {
+            var con = confirm('确认删除吗？');
+            if (con === true){
+                var selsrow = table.rows('.selected').data();
+                for (i = 0; i < selsrow.length; i++) {
+                    var parkid = selsrow[i][0];
+                    console.log(parkid);
+                    $.ajax({
+                        url: '{{ url_for('parksys.delpark') }}',
+                        type: 'POST',
+                        data: parkid,
+                        contentType: 'text',
+                        dataType: 'json',
+                        success: function (res) {
+                            if (res['status'] === 'success') {
+                                alert('删除成功');
+                                window.location.href='{{ url_for('parksys.getpark') }}'
+                            }else {
+                                alert('删除失败');
+                            }
+                        }
+                    });
+                }
+            } else {
+                console.log('cancel')
+            }
+        }
     </script>
 {% endblock %}

@@ -44,6 +44,8 @@ class ParkInfo(db.Model):
     def __repr__(self):
         return 'park_info： id[%s], name[%s], ' % (self.id, self.name)
 
+    # 删除停车场，修改state状态
+
 
 class CarInOut(db.Model):
     """
