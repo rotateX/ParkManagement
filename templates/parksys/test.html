@@ -1,0 +1,156 @@
+{% extends 'parksys/base.html' %}
+{% block stylesheet %}
+    <!-- DataTables -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/datatables-select/css/select.bootstrap4.css') }}">
+
+{% endblock %}
+{% block contentheader %}
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1 class="m-0 text-dark">停车场信息测试</h1>
+        </div><!-- /.col -->
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ url_for('parksys.indexpage') }}">首页</a></li>
+                <li class="breadcrumb-item active">停车场信息</li>
+            </ol>
+        </div><!-- /.col -->
+    </div><!-- /.row -->
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                {#                <div class="card-header">#}
+                {#                    <h3 class="card-title">停车场信息</h3>#}
+                {#                </div>#}
+                <!-- /.card-header -->
+
+                <div class="card-body">
+                    <div class="col-md-12">
+                        <ul class="list-inline">
+                            <li style="display:inline-block"><a href="{{ url_for('parksys.newpark') }}">
+                                <button type="button" class="btn btn-block btn-default">添加</button>
+                            </a></li>
+                            <li style="display:inline-block"><a href="#">
+                                <button type="button" class="btn btn-block btn-default" onclick="">修改</button>
+                            </a></li>
+                            <li style="display:inline-block"><a href="#">
+                                <button type="button" class="btn btn-block btn-default" onclick="getSels()">删除</button>
+                            </a></li>
+                            <li style="display:inline-block"><a href="#">
+                                <button type="button" class="btn btn-block btn-default">导出</button>
+                            </a></li>
+                            <li style="display:inline-block"><a href="#">
+                                <button type="button" class="btn btn-block btn-default">已删除</button>
+                            </a></li>
+                        </ul>
+                    </div>
+                    <table id="parkdata" class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>编号</th>
+                            <th>名称</th>
+                            <th>地址</th>
+                            <th>联系人</th>
+                            <th>类型</th>
+                            <th>状态</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+{% endblock %}
+
+{% block script %}
+    <!-- DataTables -->
+    <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-select/js/dataTables.select.js') }}"></script>
+    <!-- page script -->
+    <script>
+        $(function () {
+            reloadDatatables()
+        });
+        var reloadDatatables = function () {
+            var tables = $('#parkdata').DataTable({
+                select: 'single',
+                destroy: true,
+                'bAutoWidth': false,
+                "pagingType": "full_numbers",
+                "language": {"url": "{{ url_for('static', filename='plugins/datatables/language.json') }}"},
+                "serverSide": true, //开启服务器模式
+                "ajax": function (data, callback) {
+                    var param = {};
+                    param.draw = data.draw;
+                    param.start = data.start;
+                    param.length = data.length;
+                    param.page = param.start / param.length + 1; //计算页码
+                    //param.page = 1; //计算页码
+                    //console.log('为转换前： ' + typeof param);
+                    //console.log('为转换前： ' + param);
+                    //console.log('转换为stringify' + JSON.stringify(param));
+                    //console.log('转换为stringify type ' + typeof JSON.stringify(param));
+                    var paramString = JSON.stringify(param);
+                    console.log('paramString: ' + paramString);
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ url_for('parksys.getparktest') }}",
+                        data: paramString,
+                        dataType: 'json',
+                        success: function (res) {
+                            var returnData = {};
+                            returnData.draw = res.draw; // 计数器
+                            returnData.recordsTotal = res.recordsTotal;//返回数据全部记录
+                            returnData.recordsFiltered = res.recordsFiltered;//过滤后记录
+                            returnData.data = res.data; // 数据对象
+                            console.log(returnData.data);
+                            callback(returnData);
+                        },
+                        error: function () {
+                            alert('错误');
+                        }
+                    })
+                }
+            });
+        };
+
+        // 选择删除停车场
+        function getSels() {
+            var con = confirm('确认删除吗？');
+            if (con === true) {
+                var selsrow = table.rows('.selected').data();
+                for (i = 0; i < selsrow.length; i++) {
+                    var parkid = selsrow[i][0];
+                    console.log(parkid);
+                    $.ajax({
+                        url: '{{ url_for('parksys.delpark') }}',
+                        type: 'POST',
+                        data: parkid,
+                        contentType: 'text',
+                        dataType: 'json',
+                        success: function (res) {
+                            if (res['status'] === 'success') {
+                                alert('删除成功');
+                                window.location.href = '{{ url_for('parksys.getpark') }}'
+                            } else {
+                                alert('删除失败');
+                            }
+                        }
+                    });
+                }
+            } else {
+                console.log('cancel')
+            }
+        }
+    </script>
+{% endblock %}

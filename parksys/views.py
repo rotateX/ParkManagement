@@ -1,9 +1,11 @@
 # -*- coding : utf-8 -*-
 
 from flask import Blueprint
-from flask import Flask, url_for, render_template, redirect, request, flash
+from flask import Flask, url_for, render_template, redirect, request, flash, jsonify
 from parksys.models import *
 from parksys.parkdataform import ParkDataForm
+import json
+
 
 parksys = Blueprint(
     'parksys',
@@ -23,11 +25,48 @@ def indexpage():
 @parksys.route('/parkinfo', methods=['GET'])
 def getpark():
     dataSet = []
-    parks = ParkInfo.query.all()
+    parks = ParkInfo.query.order_by(ParkInfo.create_on.desc()).all()
     for park in parks:
         list = [park.id, park.name, park.address, park.contact, park.type, park.state]
         dataSet.append(list)
     return render_template('parksys/parkinfo.html', dataSet=dataSet)
+
+
+# 停车场信息页面测试
+@parksys.route('/parkinfotest', methods=['GET','POST'])
+def getparktest():
+
+    if request.method == 'POST':
+        # draw = request.data['draw']
+
+        parkdata = json.loads(request.get_data())
+        print(parkdata)
+        print(type(parkdata))
+        draw = parkdata['draw']
+        start = parkdata['start']
+        length = parkdata['length']
+        # page = start // length + 1  # 计算页码
+        page = parkdata['page']
+        # recordsTotal = ParkInfo.query.order_by(ParkInfo.create_on.desc()).count()  # 未过滤记录数
+        recordsFiltered = ParkInfo.query.filter(ParkInfo.state==1).order_by(ParkInfo.create_on.desc()).count() # 过滤后的记录
+        recordsTotal = recordsFiltered
+        pagination = ParkInfo.query.filter(ParkInfo.state==1).order_by(ParkInfo.create_on.desc()).paginate(
+            page=page, per_page=length, error_out=True)
+        parks = pagination.items
+        data = []
+        for park in parks:
+            list = [park.id, park.name, park.address, park.contact, park.type, park.state]
+            data.append(list)
+        res = {
+            'draw': 1,
+            'recordsTotal' :recordsTotal,
+            'recordsFiltered': recordsFiltered,
+            'data': data,
+        }
+        print(jsonify(res))
+        return jsonify(res)
+    else:
+        return render_template('parksys/test.html')
 
 # 停车场创建页面
 @parksys.route('/newpark', methods=['GET', 'POST'])
