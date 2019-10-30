@@ -2,29 +2,30 @@
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, DecimalField, SelectField, TextAreaField
-from wtforms.validators import DataRequired, Length
+from wtforms.validators import DataRequired, Length, Regexp
 
 class ParkDataForm(FlaskForm):
     inputName = StringField(
         # '停车场名称',
-        validators=[DataRequired("请输入停车场名称"), Length(2, 20)],
+        validators=[DataRequired("请输入停车场名称"), Length(min=2, max=20)],
         render_kw={
             'id': "inputName",
             'class': 'form-control',
+            'required': 'required',
         }
     )
     inputContact = StringField(
         # '联系人',
-        validators=[Length(0, 10)],
         render_kw={
             'id': 'inputContact',
             'class': 'form-control',
         }
     )
-    inputMobile = IntegerField(
+    inputMobile = StringField(
         # '联系电话',
+        # validators=[Regexp("1[35789]\d{9}", message="手机格式不正确")],
         render_kw={
-            'id': 'inputContact',
+            'id': 'inputMobile',
             'class': 'form-control',
         }
     )
@@ -34,17 +35,20 @@ class ParkDataForm(FlaskForm):
         render_kw={
             'id': 'inputAddress',
             'class': 'form-control',
+            'required': 'required',
         }
     )
     inputLongitude = DecimalField(
-        # '经度',
+        # '经度'
+        validators=[DataRequired('请正确填写经度')],
         render_kw={
             'id': 'inputLongitude',
             'class': 'form-control'
         }
     )
     inputLatitude = DecimalField(
-        # '纬度',
+        # '纬度'
+        validators=[DataRequired('请正确填写纬度')],
         render_kw={
             'id': 'inputLatitude',
             'class': 'form-control'
@@ -60,11 +64,11 @@ class ParkDataForm(FlaskForm):
         choices=[(0, '公用'), (1, '私人')]
     )
     inputMonthlyParking = IntegerField(
+        validators=[DataRequired('请正确填写月卡数量')],
         render_kw={
             'id': "inputMonthlyParking",
             'class': 'form-control',
         },
-        validators=[DataRequired('请输入月卡车位')]
     )
     inputChargingRules = TextAreaField(
         render_kw={
@@ -80,3 +84,11 @@ class ParkDataForm(FlaskForm):
             'rows': '3'
         }
     )
+
+    def get_errors(self):
+        errors = ''
+        for v in self.errors.values():
+            for m in v:
+                errors += m
+            errors += '\n'
+        return errors

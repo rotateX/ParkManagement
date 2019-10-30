@@ -15,20 +15,25 @@
 {% block content %}
     <div class="row">
         <div class="col-md-3"></div>
-        <div class="col-md-6">
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    <ul class="flash">
-                        {% for message in messages %}
-                            <div class="alert alert-success" style="text-align: center">
-                                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
-                                <strong>{{ message }}</strong></div>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
+        <div class="col-md-6" id="FormBody">
+            <div id="Message" class="alert alert-success" style="text-align: center" >
+                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+                <strong>注意</strong>
+            </div>
+{#            {% with messages = get_flashed_messages() %}#}
+{#                {% if messages %}#}
+{#                    <ul class="flash">#}
+{#                        {% for message in messages %}#}
+{#            <div id="Message" class="alert alert-success" style="text-align: center" >#}
+{#                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>#}
+{#                <strong>注意</strong>#}
+{#            </div>#}
+{#                        {% endfor %}#}
+{#                    </ul>#}
+{#                {% endif %}#}
+{#            {% endwith %}#}
             <div class="card card-info">
-                <form class="form-horizontal" id="ParkForm">
+                <form class="form-horizontal" id="ParkForm" method="post">
                     {{ dataform.csrf_token }}
                     <div class="card-body">
                         <div class="form-group">
@@ -70,7 +75,7 @@
                             {{ dataform.inputType }}
                         </div>
                         <div class="form-group">
-                            <label for="inputMonthlyParking">月卡车位</label>
+                            <label for="inputMonthlyParking">月卡数量</label>
 {#                            <input type="text" id="inputMonthlyParking" class="form-control">#}
                             {{ dataform.inputMonthlyParking }}
                         </div>
@@ -87,25 +92,26 @@
                     </div>
                     <!-- /.card-body -->
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-info" id="Submit">确定</button>
-                        <button type="submit" class="btn btn-default float-right" onclick="window.location.href='{{ url_for('parksys.getpark') }}'">取消</button>
+                        <button type="button" class="btn btn-info" id="Submit">确定</button>
+                        <button type="button" class="btn btn-default float-right" onclick="window.location.href='{{ url_for('parksys.getpark') }}'">取消</button>
                     </div>
                     <!-- /.card-footer -->
                 </form>
-
             </div>
             <!-- /.card -->
-
         </div>
         <div class="col-md-3"></div>
     </div>
 {% endblock %}
 {% block script %}
-<script>
+<script type="text/javascript">
 
+$('input[required]').before('<span style="color:red">*</span>'); // 必填项注释
 $('#Submit').click(function() {
+    //var messge = document.getElementById('#Message');
+    //alert(messge);
     var park_data = $('#ParkForm').serialize();
-    console.log(park_data);
+    console.log('park_data: ' + park_data);
     $.ajax({
         url: '{{ url_for('parksys.newpark') }}',
         type: 'POST',
@@ -116,7 +122,9 @@ $('#Submit').click(function() {
                 alert('创建成功');
                 window.location.href='{{ url_for('parksys.getpark') }}'
             }else {
-                alert('失败');
+                //htmltext= '<span class="help-block">注意</span>';
+                //formbody.innerHTML = '';
+                alert(res['message']);
                 console.log('failed')
             }
         }

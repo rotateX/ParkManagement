@@ -59,7 +59,7 @@
                             {{ dataform.inputType }}
                         </div>
                         <div class="form-group">
-                            <label for="inputMonthlyParking">月卡车位</label>
+                            <label for="inputMonthlyParking">月卡数量</label>
 {#                            <input type="text" id="inputMonthlyParking" class="form-control">#}
                             {{ dataform.inputMonthlyParking }}
                         </div>
@@ -76,12 +76,10 @@
                     </div>
                     <!-- /.card-body -->
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-info" id="Submit">确定</button>
-                        <button type="submit" class="btn btn-default float-right" onclick="window.location.href='{{ url_for('parksys.getpark') }}'">取消</button>
-                    </div>
+                        <button type="button" class="btn btn-info" id="Submit">确定</button>
+                        <button type="button" class="btn btn-default float-right" onclick="window.location.href='{{ url_for('parksys.getpark') }}'">取消</button>
                     <!-- /.card-footer -->
                 </form>
-
             </div>
             <!-- /.card -->
 
@@ -91,6 +89,42 @@
 {% endblock %}
 {% block script %}
 <script>
-
+$('input[required]').before('<span style="color:red">*</span>'); // 必填项注释
+console.log('{{ park.name }}');
+$(document).ready(function () {
+    document.getElementById('inputName').value = '{{ park.name }}';
+    document.getElementById('inputContact').value = '{{ park.contact }}';
+    document.getElementById('inputMobile').value = '{{ park.mobile }}';
+    document.getElementById('inputAddress').value = '{{ park.address }}';
+    document.getElementById('inputLongitude').value = '{{ park.longitude }}';
+    document.getElementById('inputLatitude').value = '{{ park.latitude }}';
+    document.getElementById('inputType').selectedIndex = {{ park.type }};
+    document.getElementById('inputMonthlyParking').value = '{{ park.monthly_parking_space }}';
+    document.getElementById('inputChargingRules').value = '{{ park.charging_rules }}';
+    document.getElementById('inputParkRemarks').value = '{{ park.remarks }}';
+});
+$('#Submit').click(function() {
+    //var messge = document.getElementById('#Message');
+    //alert(messge);
+    var park_data = $('#ParkForm').serialize();
+    console.log('park_data: ' + park_data);
+    $.ajax({
+        url: '{{ url_for('parksys.updating', parkcode=park.id) }}',
+        type: 'POST',
+        data: park_data,
+        dataType: 'json',
+        success: function (res) {
+            if (res['status'] === 'success') {
+                alert('保存成功');
+                window.location.href='{{ url_for('parksys.getpark') }}'
+            }else {
+                //htmltext= '<span class="help-block">注意</span>';
+                //formbody.innerHTML = '';
+                alert(res['message']);
+                console.log('failed')
+            }
+        }
+    })
+})
 </script>
 {% endblock %}
