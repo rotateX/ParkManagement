@@ -3,7 +3,8 @@ import os
 import config
 import unittest
 from app import app
-
+from sysunittest.plateno import newplate
+from sysunittest.timepicker import randomDate
 from parksys.models import *
 import uuid
 import random
@@ -18,8 +19,10 @@ class DatabaseTest(unittest.TestCase):
     def tearDown(self):
         print('ok')
 
+    # 创建停车场
+    @unittest.skip
     def test_create_park(self):
-        for i in range(20):
+        for i in range(2):
             park = ParkInfo(
                 id=str(uuid.uuid4()),
                 name='二环路的里面%s' % (random.randint(10,100)),
@@ -34,5 +37,18 @@ class DatabaseTest(unittest.TestCase):
             db.session.commit()
 
 
+    # 创建过车记录
+    def test_create_car(self):
+        for i in range(30):
+            car = CarInOut(
+                id = str(uuid.uuid4()),
+                park_id = '557711d6-2488-4e85-b706-96ed630fbbad',
+                plate_no = newplate(),
+                in_time = randomDate('2019-10-01 12:12:12', '2019-11-05 00:00:00'),
+                in_port = random.choice([1, 3, 5]),
+                park_state = 0
+            )
+            db.session.add(car)
+            db.session.commit()
 if __name__ == '__main__':
     unittest.main()

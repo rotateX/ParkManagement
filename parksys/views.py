@@ -35,11 +35,17 @@ def getpark():
         length = parkdata['length']
         # page = start // length + 1  # 计算页码
         page = parkdata['page']
-        # recordsTotal = ParkInfo.query.order_by(ParkInfo.create_on.desc()).count()  # 未过滤记录数
-        recordsFiltered = ParkInfo.query.filter(ParkInfo.state==1).order_by(ParkInfo.create_on.desc()).count() # 过滤后的记录
-        recordsTotal = recordsFiltered
-        pagination = ParkInfo.query.filter(ParkInfo.state==1).order_by(ParkInfo.create_on.desc()).paginate(
-            page=page, per_page=length, error_out=True)
+        searchstr = parkdata['search']
+        recordsTotal = ParkInfo.query.filter(ParkInfo.state == 1).count()  # 未过滤记录数
+        if searchstr:
+
+            recordsFiltered = ParkInfo.query.filter(ParkInfo.state==1, ParkInfo.name.like("%" + searchstr + "%")).count() # 过滤后的记录
+            pagination = ParkInfo.query.filter(ParkInfo.state==1, ParkInfo.name.like("%" + searchstr + "%")).order_by(ParkInfo.create_on.desc()).paginate(
+                page=page, per_page=length, error_out=True)
+        else:
+            recordsFiltered = ParkInfo.query.filter(ParkInfo.state==1).count() # 过滤后的记录
+            pagination = ParkInfo.query.filter(ParkInfo.state==1).order_by(ParkInfo.create_on.desc()).paginate(
+                page=page, per_page=length, error_out=True)
         parks = pagination.items
         data = []
         for park in parks:
@@ -185,3 +191,51 @@ def updating(parkcode):
         res['message'] = dataform.get_errors()
         print(res['message'])
     return jsonify(res)
+
+
+# 过车信息页面
+@parksys.route('/carinout', methods=['GET', 'POST'])
+def carinout():
+    if request.method == 'POST':
+        parkdata = json.loads(request.get_data())
+        draw = parkdata['draw']
+        start = parkdata['start']
+        length = parkdata['length']
+        # page = start // length + 1  # 计算页码
+        page = parkdata['page']
+        searchstr = parkdata['search']
+        recordsTotal = CarInOut.query.count()  # 未过滤记录数
+        if searchstr:
+            recordsFiltered = CarInOut.query.filter(CarInOut.plate_no.like("%" + searchstr + "%")).count()  # 过滤后的记录
+            pagination = CarInOut.query.filter(CarInOut.plate_no.like("%" + searchstr + "%")).order_by(
+                CarInOut.in_time.desc()).paginate(
+                page=page, per_page=length, error_out=True)
+        else:
+            recordsFiltered = recordsTotal  # 过滤后的记录
+            pagination = CarInOut.query.order_by(CarInOut.in_time.desc()).paginate(
+                page=page, per_page=length, error_out=True)
+        cars = pagination.items
+        data = []
+        for car in cars:
+            park_list = {
+                # "id": park.id,
+                "id": car.id,
+                "parkname": car.parkinfo.name,
+                "plate_no": car.plate_no,
+                "in_time": car.in_time,
+                "out_time": car.out_time,
+                "in_port": car.in_port,
+                "out_port": car.out_port,
+
+            }
+            data.append(park_list)
+        res = {
+            'draw': draw,
+            'recordsTotal': recordsTotal,
+            'recordsFiltered': recordsFiltered,
+            'data': data,
+        }
+        print(jsonify(res))
+        return jsonify(res)
+    else:
+        return render_template('parksys/carinout.html')

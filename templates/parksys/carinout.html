@@ -1,0 +1,203 @@
+{% extends 'parksys/base.html' %}
+{% block stylesheet %}
+    <!-- DataTables -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/datatables-select/css/select.bootstrap4.css') }}">
+
+{% endblock %}
+{% block contentheader %}
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1 class="m-0 text-dark">过车数据</h1>
+        </div><!-- /.col -->
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ url_for('parksys.indexpage') }}">首页</a></li>
+                <li class="breadcrumb-item active">过车数据</li>
+            </ol>
+        </div><!-- /.col -->
+    </div><!-- /.row -->
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                {#                <div class="card-header">#}
+                {#                    <h3 class="card-title">停车场信息</h3>#}
+                {#                </div>#}
+                <!-- /.card-header -->
+
+                <div class="card-body">
+                    <div class="col-md-12">
+                        <ul class="list-inline">
+                            <li style="display:inline-block"><a href="{{ url_for('parksys.newpark') }}">
+                                <button type="button" class="btn btn-block btn-default">添加</button>
+                            </a></li>
+                            {#                            <li style="display:inline-block"><input type="text" class="form-control"></li>#}
+                            {#                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" id="search">查询</button></a></li>#}
+                            <li style="display: inline-block">
+                                <div class="input-group input-group-md">
+                                    <input type="text" class="form-control" id="searchkey" placeholder="请输入车牌">
+                                    <span class="input-group-append">
+                                    <button type="button" class="btn btn-info btn-flat" id="search">查询</button>
+                                  </span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <table id="parkdata" class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>编号</th>
+                            <th>停车场名称</th>
+                            <th>车牌</th>
+                            <th>进场时间</th>
+                            <th>出场时间</th>
+                            <th>进场通道</th>
+                            <th>出场通道</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+{% endblock %}
+
+{% block script %}
+    <!-- DataTables -->
+    <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-select/js/dataTables.select.js') }}"></script>
+    <!-- page script -->
+    <script>
+        Date.prototype.Format = function (fmt) { //author: meizz
+            var o = {
+                "M+": this.getMonth() + 1, //月份
+
+                "d+": this.getDate(), //日
+
+                "h+": this.getHours(), //小时
+
+                "m+": this.getMinutes(), //分
+
+                "s+": this.getSeconds(), //秒
+
+                "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+
+                "S": this.getMilliseconds() //毫秒
+
+            };
+            if (/(y+)/.test(fmt)) {
+                fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            }
+            for (var k in o) {
+                if (new RegExp("(" + k + ")").test(fmt)) {
+                    fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+                }
+            }
+            return fmt;
+        };
+
+        $(function () {
+            reloadDatatables()
+        });
+        var reloadDatatables = function () {
+            // 初始化  datatables
+            var tables = $('#parkdata').DataTable({
+                select: 'single',
+                destroy: true,
+                searching: false,
+                ordering: false,
+                'bAutoWidth': false,
+                "deferRender": true,
+                "pagingType": "full_numbers",
+                "language": {"url": "{{ url_for('static', filename='plugins/datatables/language.json') }}"},
+                "serverSide": true, //开启服务器模式
+                "ajax": function (data, callback) {
+                    var param = {};
+                    param.draw = data.draw;
+                    param.start = data.start;
+                    param.length = data.length;
+                    param.page = param.start / param.length + 1; //计算页码
+                    searchstr = $('#searchkey').val().replace(/\s*/g, "");
+                    if (searchstr.length > 0) {
+                        param.search = searchstr;
+                    } else {
+                        param.search = '';
+                        console.log('无搜索参数')
+                    }
+                    var paramString = JSON.stringify(param);
+                    console.log('paramString: ' + paramString);
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ url_for('parksys.carinout') }}",
+                        data: paramString,
+                        dataType: 'json',
+                        success: function (res) {
+                            var returnData = {};
+                            returnData.draw = res.draw; // 计数器
+                            returnData.recordsTotal = res.recordsTotal;//返回数据全部记录
+                            returnData.recordsFiltered = res.recordsFiltered;//过滤后记录
+                            returnData.data = res.data; // 数据对象
+                            console.log(returnData.data);
+                            callback(returnData);
+                        },
+                        error: function () {
+                            alert('错误');
+                        }
+                    })
+                },
+                "columns": [
+                    {"data": "id"},
+                    {"data": "parkname"},
+                    {"data": "plate_no"},
+                    {
+                        "data": "in_time",
+                        render: function (data, type, row, meta) {
+                            return (new Date(data)).Format("yyyy-MM-dd hh:mm:ss");
+                        }
+                    },
+                    {
+                        "data": "out_time",
+                        render: function (data, type, row, meta) {
+                            if (data){
+                                return (new Date(data)).Format("yyyy-MM-dd hh:mm:ss");
+                            } else {
+                                return data = '';
+                            }
+                            //alert(typeof(data));
+                            //return (new Date(data)).Format("yyyy-MM-dd hh:mm:ss");
+                        }
+                    },
+                    {"data": "in_port"},
+                    {"data": "out_port"}
+                ]
+            });
+            // 行选中
+            var parkcode = '';
+            $('#parkdata tbody').on('click', 'tr', function () {
+                {#alert($(this).hasClass('selected'));#}
+                if ($(this).hasClass('selected')) {
+                    // 这个点击的时候如果有selected,该次点击则取消selected,parkid置空
+                    parkcode = '';
+                    console.log('取消选择');
+                } else {
+                    parkcode = tables.row(this).id();
+                    console.log('选中' + parkcode);
+                }
+            });
+            // 查询
+            $('#search').click(function () {
+                tables.draw();
+            });
+
+        };
+    </script>
+{% endblock %}

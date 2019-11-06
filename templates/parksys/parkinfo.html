@@ -34,7 +34,16 @@
                             <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" id="update">修改</button></a></li>
                             <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" id="delbut">删除</button></a></li>
                             <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default">导出</button></a></li>
-                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default">已删除</button></a></li>
+{#                            <li style="display:inline-block"><input type="text" class="form-control"></li>#}
+{#                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" id="search">查询</button></a></li>#}
+                            <li style="display: inline-block">
+                                <div class="input-group input-group-md">
+                                  <input type="text" class="form-control" id="searchkey" placeholder="请输入停车场名称">
+                                  <span class="input-group-append">
+                                    <button type="button" class="btn btn-info btn-flat" id="search">查询</button>
+                                  </span>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                     <table id="parkdata" class="table table-bordered table-hover">
@@ -74,6 +83,8 @@
             var tables = $('#parkdata').DataTable({
                 select: 'single',
                 destroy: true,
+                searching: false,
+                ordering: false,
                 'bAutoWidth': false,
                 "pagingType": "full_numbers",
                 "language": {"url": "{{ url_for('static', filename='plugins/datatables/language.json') }}"},
@@ -84,6 +95,13 @@
                     param.start = data.start;
                     param.length = data.length;
                     param.page = param.start / param.length + 1; //计算页码
+                    searchstr = $('#searchkey').val().replace(/\s*/g,"");
+                    if (searchstr.length > 0){
+                        param.search = searchstr;
+                    } else {
+                        param.search = '';
+                        console.log('无搜索参数')
+                    }
                     //param.page = 1; //计算页码
                     //console.log('为转换前： ' + typeof param);
                     //console.log('为转换前： ' + param);
@@ -106,7 +124,7 @@
                             callback(returnData);
                         },
                         error: function () {
-                            alert('错误');
+                            alert('查询出错，请重试');
                         }
                     })
                 },
@@ -115,8 +133,24 @@
                     {"data": "name"},
                     {"data": "addr"},
                     {"data": "contact"},
-                    {"data": "type"},
-                    {"data": "state"}
+                    {
+                        "data": "type",
+                        "render": function (data, type, full, meta) {
+                            if(data === 0){
+                                return data = '公共';
+                            }else{
+                                return data = '私人';
+                            }
+                        }
+                    },
+                    {
+                        "data": "state",
+                        "render": function (data, type, full, meta) {
+                            if(data === 1){
+                                return data = '启用';
+                            }
+                        }
+                    },
                 ]
             });
             // 行选中
@@ -132,7 +166,11 @@
                     console.log('选中' + parkcode);
                 }
             });
-
+            // 查询
+            $('#search').click(function () {
+                {#tables.draw();#}
+                reloadDatatables()
+            });
             // 绑定删除按钮，删除停车场
             var delbut = document.querySelector('#delbut');
             delbut.onclick = function () {

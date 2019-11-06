@@ -21,7 +21,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
     {% endblock %}
 </head>
-<body class="sidebar-mini sidebar-collapse">
+{#<body class="sidebar-mini sidebar-collapse">#}
+<body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
     <!-- Navbar -->
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
@@ -202,7 +203,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="{{ url_for('parksys.carinout') }}" class="nav-link">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>过车数据</p>
                                 </a>
@@ -292,17 +293,17 @@ scratch. This page gets rid of all links and provides the needed markup only.
         <div class="content-header">
             <div class="container-fluid">
                 {% block contentheader %}
-{#                    <div class="row mb-2">#}
-{#                        <div class="col-sm-6">#}
-{#                            <h1 class="m-0 text-dark">Starter Page</h1>#}
-{#                        </div><!-- /.col -->#}
-{#                        <div class="col-sm-6">#}
-{#                            <ol class="breadcrumb float-sm-right">#}
-{#                                <li class="breadcrumb-item"><a href="#">Home</a></li>#}
-{#                                <li class="breadcrumb-item active">Starter Page</li>#}
-{#                            </ol>#}
-{#                        </div><!-- /.col -->#}
-{#                    </div><!-- /.row -->#}
+                    {#                    <div class="row mb-2">#}
+                    {#                        <div class="col-sm-6">#}
+                    {#                            <h1 class="m-0 text-dark">Starter Page</h1>#}
+                    {#                        </div><!-- /.col -->#}
+                    {#                        <div class="col-sm-6">#}
+                    {#                            <ol class="breadcrumb float-sm-right">#}
+                    {#                                <li class="breadcrumb-item"><a href="#">Home</a></li>#}
+                    {#                                <li class="breadcrumb-item active">Starter Page</li>#}
+                    {#                            </ol>#}
+                    {#                        </div><!-- /.col -->#}
+                    {#                    </div><!-- /.row -->#}
                 {% endblock %}
             </div><!-- /.container-fluid -->
         </div>
@@ -412,6 +413,19 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <!-- AdminLTE App -->
 <script src="{{ url_for('static', filename='dist/js/adminlte.min.js') }}"></script>
+<script>
+    $('.nav-pills').find('a').each(function () {
+        if (this.href == document.location.href || document.location.href.search(this.href) >= 0) {
+            $(this).addClass('active');
+            //console.log($(this).parents());
+            if ($(this).parents().hasClass('nav-treeview')) {
+                {#alert('true');#}
+                $(this).parents('.has-treeview').addClass('menu-open');
+                $(this).parents('.nav-treeview').prevAll('a').addClass('active');
+            }
+        }
+    });
+</script>
 {% block script %}
 
 {% endblock %}
