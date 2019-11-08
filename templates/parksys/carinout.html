@@ -5,6 +5,7 @@
           href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
     <link rel="stylesheet"
           href="{{ url_for('static', filename='plugins/datatables-select/css/select.bootstrap4.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/daterangepicker/daterangepicker.css') }}">
 
 {% endblock %}
 {% block contentheader %}
@@ -32,12 +33,29 @@
                 <div class="card-body">
                     <div class="col-md-12">
                         <ul class="list-inline">
-                            <li style="display:inline-block"><a href="{{ url_for('parksys.newpark') }}">
-                                <button type="button" class="btn btn-block btn-default">添加</button>
-                            </a></li>
+                            {#                            <li style="display:inline-block">#}
+                            {#                                <a href="#">#}
+                            {#                                <button type="button" class="btn btn-block btn-default">添加车辆入场</button>#}
+                            {#                                </a>#}
+                            {#                            </li>#}
                             {#                            <li style="display:inline-block"><input type="text" class="form-control"></li>#}
                             {#                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" id="search">查询</button></a></li>#}
-                            <li style="display: inline-block">
+
+                            <li class="col-md-5" style="display: inline-block">
+                                <!-- Date and time range -->
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">入场时间:</span>
+                                        </div>
+                                        <input type="text" class="form-control float-right" id="intimerange"
+                                               onclick="customRangeLabelan()" readonly="readonly" style="background: transparent;">
+                                    </div>
+                                </div>
+                                <!-- Date and time range -->
+                            </li>
+
+                            <li class="col-md-3" style="display: inline-block">
                                 <div class="input-group input-group-md">
                                     <input type="text" class="form-control" id="searchkey" placeholder="请输入车牌">
                                     <span class="input-group-append">
@@ -75,8 +93,54 @@
     <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.js') }}"></script>
     <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
     <script src="{{ url_for('static', filename='plugins/datatables-select/js/dataTables.select.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/moment/moment.min.js') }}"></script>
+    <!-- date-range-picker -->
+    <script src="{{ url_for('static', filename='plugins/daterangepicker/daterangepicker.js') }}"></script>
     <!-- page script -->
     <script>
+        /* 默认打开自定义面板*/
+        function customRangeLabelan() {
+            $('.ranges li:eq(6)').click();
+        }
+
+        // 进场时间范围选择
+        $(function () {
+            var intimepicker = $('#intimerange').daterangepicker({
+                timePicker: true,
+                timePickerIncrement: 1,
+                timePicker24Hour: true,
+                timePickerSeconds: true,
+                startDate: moment().startOf('day'),
+                endDate: moment().endOf('day'),
+                showSecond: true,
+                ranges: {
+                    '今天': [moment().startOf('day'), moment().endOf('day')],
+                    '昨天': [moment().subtract('days', 1).startOf('day'), moment().subtract('days', 1).endOf('day')],
+                    '最近7天': [moment().subtract('days', 6).startOf('day'), moment().endOf('day')],
+                    '最近30天': [moment().subtract('days', 29).startOf('day'), moment().endOf('day')],
+                    '本月': [moment().startOf('month'), moment().endOf('month')],
+                    '上月': [moment().subtract(1, 'months').startOf('month'), moment().subtract(1, 'months').endOf('month')]
+                },
+                locale: {
+                    format: 'YYYY-MM-DD HH:mm:ss',
+                    monthNames: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+                    daysOfWeek: ['日', '一', '二', '三', '四', '五', '六'],
+                    firstDay: 1,
+                    applyLabel: "应用",
+                    cancelLabel: "取消",
+                    customRangeLabel: '自定义',
+                    separator : '~',
+                },
+            });
+            intimepicker.on('apply.daterangepicker',function(ev, picker) {
+                t = $('#intimerange').val().split("~");
+                var begintime = t[0];
+                var endtime = t[1];
+                console.log(begintime, endtime);
+            });
+        });
+
+        // 格式化datatables中的时间
         Date.prototype.Format = function (fmt) { //author: meizz
             var o = {
                 "M+": this.getMonth() + 1, //月份
@@ -105,6 +169,7 @@
             return fmt;
         };
 
+        // datatables 方法
         $(function () {
             reloadDatatables()
         });
@@ -126,7 +191,11 @@
                     param.start = data.start;
                     param.length = data.length;
                     param.page = param.start / param.length + 1; //计算页码
-                    searchstr = $('#searchkey').val().replace(/\s*/g, "");
+                    var searchstr = $('#searchkey').val().replace(/\s*/g, "");
+                    var timerange = $('#intimerange').val().split("~");
+                    param.begintime = timerange[0];
+                    param.endtime = timerange[1];
+                    console.log(timerange);
                     if (searchstr.length > 0) {
                         param.search = searchstr;
                     } else {
@@ -167,7 +236,7 @@
                     {
                         "data": "out_time",
                         render: function (data, type, row, meta) {
-                            if (data){
+                            if (data) {
                                 return (new Date(data)).Format("yyyy-MM-dd hh:mm:ss");
                             } else {
                                 return data = '';

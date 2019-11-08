@@ -4,12 +4,34 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, DecimalField, SelectField, TextAreaField
 from wtforms.validators import DataRequired, Length, Regexp
 
+class LoginForm(FlaskForm):
+    loginname = StringField(
+        # 登录名
+        validators=[DataRequired("请输入用户名"), Length(min=2, max=50)],
+        render_kw={
+            'id': 'loginname',
+            'type': 'text',
+            'class': 'form-control',
+            'placeholder': '登录名',
+        }
+    )
+    password = StringField(
+        # 密码
+        validators=[DataRequired("请输入密码"), Length(min=6, max=32)],
+        render_kw={
+            'id': 'password',
+            'type': 'password',
+            'class': 'form-control',
+            'placeholder': '密码',
+        }
+    )
+
 class ParkDataForm(FlaskForm):
     inputName = StringField(
         # '停车场名称',
         validators=[DataRequired("请输入停车场名称"), Length(min=2, max=20)],
         render_kw={
-            'id': "inputName",
+            'id': 'inputName',
             'class': 'form-control',
             'required': 'required',
         }

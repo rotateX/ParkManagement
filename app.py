@@ -31,6 +31,7 @@ manager.add_command('db', MigrateCommand)
 
 db.init_app(app)
 
+
 @app.route('/')
 def hello_world():
 

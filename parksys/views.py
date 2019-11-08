@@ -3,10 +3,13 @@
 from flask import Blueprint
 from flask import Flask, url_for, render_template, redirect, request, flash, jsonify
 from parksys.models import *
-from parksys.parkdataform import ParkDataForm
+from parksys.parkdataform import ParkDataForm, LoginForm
 import json
 import uuid
+from logger import Logger
+import datetime
 
+logger = Logger(logger='parksys').getlog()
 
 parksys = Blueprint(
     'parksys',
@@ -16,6 +19,11 @@ parksys = Blueprint(
     static_folder='static'
 )
 
+# 登录页面
+@parksys.route('/login', methods=['GET', 'POST'])
+def login():
+    loginform = LoginForm()
+    return render_template('parksys/login.html', loginform=loginform)
 
 # 平台首页
 @parksys.route('/index', methods=['GET'])
@@ -38,7 +46,6 @@ def getpark():
         searchstr = parkdata['search']
         recordsTotal = ParkInfo.query.filter(ParkInfo.state == 1).count()  # 未过滤记录数
         if searchstr:
-
             recordsFiltered = ParkInfo.query.filter(ParkInfo.state==1, ParkInfo.name.like("%" + searchstr + "%")).count() # 过滤后的记录
             pagination = ParkInfo.query.filter(ParkInfo.state==1, ParkInfo.name.like("%" + searchstr + "%")).order_by(ParkInfo.create_on.desc()).paginate(
                 page=page, per_page=length, error_out=True)
@@ -107,11 +114,13 @@ def newpark():
             try:
                 db.session.add(park)
                 db.session.commit()
-                print('添加成功')
+                # print('添加成功')
+                logger.info('newpark - <%s> 停车场创建成功' % name)
                 res['status'] = 'success'
             except Exception as err:
                 res['status'] = 'error'
-                print('写入数据库失败')
+                logger.info('newpark - <%s> 停车场写入数据库失败，错误： %s' % (name, str(err)))
+                # print('写入数据库失败')
                 print(err)
         else:
             res['status'] = 'failed'
@@ -134,9 +143,11 @@ def delpark():
             park.state = 0
             db.session.commit()
             res['status'] = 'success'
+            logger.info('delpark - 删除 <%s> 停车场成功' % park.name)
         except Exception as err:
             res['status'] = 'error'
-            print('数据库出错：' + str(err))
+            logger.info('delpark - 删除 <%s> 停车场时出错，错误： %s' % (park.name, str(err)))
+            # print('数据库出错：' + str(err))
     else:
         res['status'] = 'failed'
     return res
@@ -180,12 +191,14 @@ def updating(parkcode):
         park.remarks = dataform.inputParkRemarks.data
         try:
             db.session.commit()
-            print('保存成功')
+            # print('保存成功')
+            logger.info('updating - <%s> 停车场信息修改成功' % park.name)
             res['status'] = 'success'
         except Exception as err:
             res['status'] = 'error'
-            print('写入数据库失败')
-            print(err)
+            # print('写入数据库失败')
+            logger.info('updating - <%s> 停车场信息修改失败，错误： %s' % (park.name, str(err)))
+            # print(err)
     else:
         res['status'] = 'failed'
         res['message'] = dataform.get_errors()
@@ -203,8 +216,22 @@ def carinout():
         length = parkdata['length']
         # page = start // length + 1  # 计算页码
         page = parkdata['page']
+        # begintime = parkdata['begintime']
+        # endtime = parkdata['endtime']
         searchstr = parkdata['search']
-        recordsTotal = CarInOut.query.count()  # 未过滤记录数
+        try:
+            begintime = datetime.datetime.strptime(parkdata['begintime'], "%Y-%m-%d %H:%M:%S")
+            endtime = datetime.datetime.strptime(parkdata['endtime'], "%Y-%m-%d %H:%M:%S")
+        except Exception as errstrtime:
+            # 获取不到时间时默认请求当天数据
+            now = datetime.datetime.now()
+            begintime = now - datetime.timedelta(hours=now.hour, minutes=now.minute, seconds=now.second,
+                                                 microseconds=now.microsecond)
+            endtime = begintime + datetime.timedelta(hours=23, minutes=59, seconds=59)
+            print(str(errstrtime))
+
+        recordsTotal = CarInOut.query.filter(CarInOut.in_time>=begintime,CarInOut.in_time<=endtime).count()  # 未过滤记录数
+
         if searchstr:
             recordsFiltered = CarInOut.query.filter(CarInOut.plate_no.like("%" + searchstr + "%")).count()  # 过滤后的记录
             pagination = CarInOut.query.filter(CarInOut.plate_no.like("%" + searchstr + "%")).order_by(
