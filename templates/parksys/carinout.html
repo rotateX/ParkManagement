@@ -49,23 +49,38 @@
                                             <span class="input-group-text">入场时间:</span>
                                         </div>
                                         <input type="text" class="form-control float-right" id="intimerange"
-                                               onclick="customRangeLabelan()" readonly="readonly" style="background: transparent;">
+                                               onclick="customRangeLabelan()" readonly="readonly"
+                                               style="background: transparent;">
                                     </div>
                                 </div>
                                 <!-- Date and time range -->
                             </li>
-
                             <li class="col-md-3" style="display: inline-block">
-                                <div class="input-group input-group-md">
-                                    <input type="text" class="form-control" id="searchkey" placeholder="请输入车牌">
-                                    <span class="input-group-append">
-                                    <button type="button" class="btn btn-info btn-flat" id="search">查询</button>
-                                  </span>
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">停车场:</span>
+                                        </div>
+                                        <input type="text" class="form-control" id="searchpark" placeholder="请输入停车场">
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="col-md-3" style="display: inline-block">
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">车牌:</span>
+                                        </div>
+                                        <input type="text" class="form-control" id="searchcarno" placeholder="请输入车牌">
+                                        <span class="input-group-append">
+                                            <button type="button" class="btn btn-info btn-flat" id="search">查询</button>
+                                        </span>
+                                    </div>
                                 </div>
                             </li>
                         </ul>
                     </div>
-                    <table id="parkdata" class="table table-bordered table-hover">
+                    <table id="cardata" class="table table-bordered table-hover">
                         <thead>
                         <tr>
                             <th>编号</th>
@@ -98,11 +113,24 @@
     <script src="{{ url_for('static', filename='plugins/daterangepicker/daterangepicker.js') }}"></script>
     <!-- page script -->
     <script>
-        /* 默认打开自定义面板*/
+        // 默认打开自定义面板
         function customRangeLabelan() {
             $('.ranges li:eq(6)').click();
         }
-
+        // 搜索
+        var searchcarno = '';
+        var begintime1 = moment().startOf('day').format('YYYY-MM-DD HH:mm:ss');
+        var endtime1 = moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        var searchpark = '';
+        $("#search").click(function () {
+            searchcarno = $('#searchcarno').val().replace(/\s*/g, "");
+            var t= $('#intimerange').val().split("~");
+            begintime1 = t[0];
+            endtime1 = t[1];
+            searchpark =$('#searchpark').val().replace(/\s*/g, "");
+            reloadDatatables()
+            //alert(searchkey);
+        });
         // 进场时间范围选择
         $(function () {
             var intimepicker = $('#intimerange').daterangepicker({
@@ -129,10 +157,10 @@
                     applyLabel: "应用",
                     cancelLabel: "取消",
                     customRangeLabel: '自定义',
-                    separator : '~',
+                    separator: '~',
                 },
             });
-            intimepicker.on('apply.daterangepicker',function(ev, picker) {
+            intimepicker.on('apply.daterangepicker', function (ev, picker) {
                 t = $('#intimerange').val().split("~");
                 var begintime = t[0];
                 var endtime = t[1];
@@ -175,7 +203,7 @@
         });
         var reloadDatatables = function () {
             // 初始化  datatables
-            var tables = $('#parkdata').DataTable({
+            var tables = $('#cardata').DataTable({
                 select: 'single',
                 destroy: true,
                 searching: false,
@@ -191,17 +219,13 @@
                     param.start = data.start;
                     param.length = data.length;
                     param.page = param.start / param.length + 1; //计算页码
-                    var searchstr = $('#searchkey').val().replace(/\s*/g, "");
-                    var timerange = $('#intimerange').val().split("~");
-                    param.begintime = timerange[0];
-                    param.endtime = timerange[1];
-                    console.log(timerange);
-                    if (searchstr.length > 0) {
-                        param.search = searchstr;
-                    } else {
-                        param.search = '';
-                        console.log('无搜索参数')
-                    }
+                    param.carno = searchcarno;
+                    param.parkname = searchpark;
+                    //var searchstr = $('#searchcarno').val().replace(/\s*/g, "");
+                    //var timerange = $('#intimerange').val().split("~");
+                    param.begintime = begintime1;
+                    param.endtime = endtime1;
+                    console.log(begintime1, endtime1);
                     var paramString = JSON.stringify(param);
                     console.log('paramString: ' + paramString);
                     $.ajax({
@@ -249,24 +273,6 @@
                     {"data": "out_port"}
                 ]
             });
-            // 行选中
-            var parkcode = '';
-            $('#parkdata tbody').on('click', 'tr', function () {
-                {#alert($(this).hasClass('selected'));#}
-                if ($(this).hasClass('selected')) {
-                    // 这个点击的时候如果有selected,该次点击则取消selected,parkid置空
-                    parkcode = '';
-                    console.log('取消选择');
-                } else {
-                    parkcode = tables.row(this).id();
-                    console.log('选中' + parkcode);
-                }
-            });
-            // 查询
-            $('#search').click(function () {
-                tables.draw();
-            });
-
         };
     </script>
 {% endblock %}

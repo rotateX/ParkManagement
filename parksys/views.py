@@ -216,9 +216,9 @@ def carinout():
         length = parkdata['length']
         # page = start // length + 1  # 计算页码
         page = parkdata['page']
-        # begintime = parkdata['begintime']
-        # endtime = parkdata['endtime']
-        searchstr = parkdata['search']
+        begintime = parkdata['begintime']
+        endtime = parkdata['endtime']
+        carno = parkdata['carno']
         try:
             begintime = datetime.datetime.strptime(parkdata['begintime'], "%Y-%m-%d %H:%M:%S")
             endtime = datetime.datetime.strptime(parkdata['endtime'], "%Y-%m-%d %H:%M:%S")
@@ -232,9 +232,9 @@ def carinout():
 
         recordsTotal = CarInOut.query.filter(CarInOut.in_time>=begintime,CarInOut.in_time<=endtime).count()  # 未过滤记录数
 
-        if searchstr:
-            recordsFiltered = CarInOut.query.filter(CarInOut.plate_no.like("%" + searchstr + "%")).count()  # 过滤后的记录
-            pagination = CarInOut.query.filter(CarInOut.plate_no.like("%" + searchstr + "%")).order_by(
+        if carno:
+            recordsFiltered = CarInOut.query.filter(CarInOut.plate_no.like("%" + carno + "%")).count()  # 过滤后的记录
+            pagination = CarInOut.query.filter(CarInOut.plate_no.like("%" + carno + "%")).order_by(
                 CarInOut.in_time.desc()).paginate(
                 page=page, per_page=length, error_out=True)
         else:
@@ -253,7 +253,6 @@ def carinout():
                 "out_time": car.out_time,
                 "in_port": car.in_port,
                 "out_port": car.out_port,
-
             }
             data.append(park_list)
         res = {

@@ -1,45 +1,55 @@
 {% extends 'parksys/base.html' %}
 {% block stylesheet %}
     <!-- DataTables -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-select/css/select.bootstrap4.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/datatables-select/css/select.bootstrap4.css') }}">
 
 {% endblock %}
 {% block contentheader %}
-<div class="row mb-2">
-    <div class="col-sm-6">
-        <h1 class="m-0 text-dark">停车场信息</h1>
-    </div><!-- /.col -->
-    <div class="col-sm-6">
-        <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ url_for('parksys.indexpage') }}">首页</a></li>
-            <li class="breadcrumb-item active">停车场信息</li>
-        </ol>
-    </div><!-- /.col -->
-</div><!-- /.row -->
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1 class="m-0 text-dark">停车场信息</h1>
+        </div><!-- /.col -->
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ url_for('parksys.indexpage') }}">首页</a></li>
+                <li class="breadcrumb-item active">停车场信息</li>
+            </ol>
+        </div><!-- /.col -->
+    </div><!-- /.row -->
 {% endblock %}
 {% block content %}
     <div class="row">
         <div class="col-12">
             <div class="card">
-{#                <div class="card-header">#}
-{#                    <h3 class="card-title">停车场信息</h3>#}
-{#                </div>#}
+                {#                <div class="card-header">#}
+                {#                    <h3 class="card-title">停车场信息</h3>#}
+                {#                </div>#}
                 <!-- /.card-header -->
 
                 <div class="card-body">
                     <div class="col-md-12">
                         <ul class="list-inline">
-                            <li style="display:inline-block"><a href="{{ url_for('parksys.newpark') }}"><button type="button" class="btn btn-block btn-default">添加</button></a></li>
-                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" id="update">修改</button></a></li>
-                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" id="delbut">删除</button></a></li>
-                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default">导出</button></a></li>
-{#                            <li style="display:inline-block"><input type="text" class="form-control"></li>#}
-{#                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" id="search">查询</button></a></li>#}
+                            <li style="display:inline-block"><a href="{{ url_for('parksys.newpark') }}">
+                                <button type="button" class="btn btn-block btn-default">添加</button>
+                            </a></li>
+                            <li style="display:inline-block"><a href="#">
+                                <button type="button" class="btn btn-block btn-default" id="update">修改</button>
+                            </a></li>
+                            <li style="display:inline-block"><a href="#">
+                                <button type="button" class="btn btn-block btn-default" id="delbut">删除</button>
+                            </a></li>
+                            <li style="display:inline-block"><a href="#">
+                                <button type="button" class="btn btn-block btn-default">导出</button>
+                            </a></li>
+                            {#                            <li style="display:inline-block"><input type="text" class="form-control"></li>#}
+                            {#                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" id="search">查询</button></a></li>#}
                             <li style="display: inline-block">
                                 <div class="input-group input-group-md">
-                                  <input type="text" class="form-control" id="searchkey" placeholder="请输入停车场名称">
-                                  <span class="input-group-append">
+                                    <input type="text" class="form-control" id="searchkey" placeholder="请输入停车场名称">
+                                    <span class="input-group-append">
                                     <button type="button" class="btn btn-info btn-flat" id="search">查询</button>
                                   </span>
                                 </div>
@@ -75,8 +85,16 @@
     <script src="{{ url_for('static', filename='plugins/datatables-select/js/dataTables.select.js') }}"></script>
     <!-- page script -->
     <script>
-        $(function () {
+        {#    全局搜索变量，查询#}
+        var searchkey = '';
+        $("#search").click(function () {
+            searchkey = '';
+            searchkey = $('#searchkey').val().replace(/\s*/g, "");
             reloadDatatables()
+            //alert(searchkey);
+        });
+        $(function () {
+            reloadDatatables();
         });
         var reloadDatatables = function () {
             // 初始化  datatables
@@ -95,13 +113,13 @@
                     param.start = data.start;
                     param.length = data.length;
                     param.page = param.start / param.length + 1; //计算页码
-                    searchstr = $('#searchkey').val().replace(/\s*/g,"");
-                    if (searchstr.length > 0){
-                        param.search = searchstr;
-                    } else {
-                        param.search = '';
-                        console.log('无搜索参数')
-                    }
+                    param.search = searchkey;
+                    //if (searchstr.length > 0) {
+                    //    param.search = searchstr;
+                    //} else {
+                    //    param.search = '';
+                    //    console.log('无搜索参数')
+                    //}
                     //param.page = 1; //计算页码
                     //console.log('为转换前： ' + typeof param);
                     //console.log('为转换前： ' + param);
@@ -136,9 +154,9 @@
                     {
                         "data": "type",
                         "render": function (data, type, full, meta) {
-                            if(data === 0){
+                            if (data === 0) {
                                 return data = '公共';
-                            }else{
+                            } else {
                                 return data = '私人';
                             }
                         }
@@ -146,7 +164,7 @@
                     {
                         "data": "state",
                         "render": function (data, type, full, meta) {
-                            if(data === 1){
+                            if (data === 1) {
                                 return data = '启用';
                             }
                         }
@@ -157,7 +175,7 @@
             var parkcode = '';
             $('#parkdata tbody').on('click', 'tr', function () {
                 {#alert($(this).hasClass('selected'));#}
-                if ($(this).hasClass('selected')){
+                if ($(this).hasClass('selected')) {
                     // 这个点击的时候如果有selected,该次点击则取消selected,parkid置空
                     parkcode = '';
                     console.log('取消选择');
@@ -167,17 +185,17 @@
                 }
             });
             // 查询
-            $('#search').click(function () {
+            //$('#search').click(function () {
                 {#tables.draw();#}
-                reloadDatatables()
-            });
+            //    reloadDatatables()
+            //});
             // 绑定删除按钮，删除停车场
             var delbut = document.querySelector('#delbut');
             delbut.onclick = function () {
                 if (parkcode !== '') {
                     var con = confirm('确认删除吗？');
                     console.log('准备删除id: ' + parkcode);
-                    console.log('parkcode='+parkcode);
+                    console.log('parkcode=' + parkcode);
                     if (con === true) {
                         $.ajax({
                             url: '{{ url_for('parksys.delpark') }}',
