@@ -11,6 +11,16 @@ import random
 
 
 class DatabaseTest(unittest.TestCase):
+
+    # def setUp(self):
+    #     self.app = app
+    #     app.config.from_object(config.DevelopmentConfig)
+    #     app.app_context().push()
+    #     db.create_all()
+    #
+    # def tearDown(self):
+    #     db.session.remove()
+    #     db.drop_all()
     def setUp(self):
         self.app = app
         # app.config.from_object(config.DevelopmentConfig)
