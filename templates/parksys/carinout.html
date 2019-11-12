@@ -169,6 +169,7 @@
         });
 
         // 格式化datatables中的时间
+
         Date.prototype.Format = function (fmt) { //author: meizz
             var o = {
                 "M+": this.getMonth() + 1, //月份
@@ -253,21 +254,20 @@
                     {"data": "plate_no"},
                     {
                         "data": "in_time",
-                        render: function (data, type, row, meta) {
-                            return (new Date(data)).Format("yyyy-MM-dd hh:mm:ss");
-                        }
+                        {#render: function (data, type, row, meta) {#}
+                        {#    return (new Date(data)).Format("yyyy-MM-dd hh:mm:ss");#}
+                        //}
                     },
                     {
                         "data": "out_time",
-                        render: function (data, type, row, meta) {
-                            if (data) {
-                                return (new Date(data)).Format("yyyy-MM-dd hh:mm:ss");
-                            } else {
-                                return data = '';
-                            }
-                            //alert(typeof(data));
-                            //return (new Date(data)).Format("yyyy-MM-dd hh:mm:ss");
-                        }
+                        {#render: function (data, type, row, meta) {#}
+                        {#    if (data) {#}
+                        {#        return (new Date(data)).Format("yyyy-MM-dd hh:mm:ss");#}
+                        {#    } else {#}
+                        {#        return data = '';#}
+                        {#    }#}
+                        {#    //return (new Date(data)).Format("yyyy-MM-dd hh:mm:ss");#}
+                        //}
                     },
                     {"data": "in_port"},
                     {"data": "out_port"}

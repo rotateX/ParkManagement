@@ -8,6 +8,7 @@ import json
 import uuid
 from logger import Logger
 import datetime
+import re
 
 logger = Logger(logger='parksys').getlog()
 
@@ -43,7 +44,7 @@ def getpark():
         length = parkdata['length']
         # page = start // length + 1  # 计算页码
         page = parkdata['page']
-        searchstr = parkdata['search']
+        searchstr = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', parkdata['search'])) # 过滤特殊字符
         recordsTotal = ParkInfo.query.filter(ParkInfo.state == 1).count()  # 未过滤记录数
         if searchstr:
             recordsFiltered = ParkInfo.query.filter(ParkInfo.state==1, ParkInfo.name.like("%" + searchstr + "%")).count() # 过滤后的记录
@@ -216,9 +217,8 @@ def carinout():
         length = parkdata['length']
         # page = start // length + 1  # 计算页码
         page = parkdata['page']
-        begintime = parkdata['begintime']
-        endtime = parkdata['endtime']
-        carno = parkdata['carno']
+        carno = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', parkdata['carno']))  # 只提取中文、英文、数字
+        parkname = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', parkdata['parkname']))
         try:
             begintime = datetime.datetime.strptime(parkdata['begintime'], "%Y-%m-%d %H:%M:%S")
             endtime = datetime.datetime.strptime(parkdata['endtime'], "%Y-%m-%d %H:%M:%S")
@@ -230,27 +230,59 @@ def carinout():
             endtime = begintime + datetime.timedelta(hours=23, minutes=59, seconds=59)
             print(str(errstrtime))
 
-        recordsTotal = CarInOut.query.filter(CarInOut.in_time>=begintime,CarInOut.in_time<=endtime).count()  # 未过滤记录数
+        # 未过滤记录数
+        recordsTotal = CarInOut.query.filter(
+            CarInOut.in_time <= endtime,
+            CarInOut.in_time >= begintime
+        ).count()
+        if parkname:
+            park_list = []
+            parkobj = ParkInfo.query.filter(ParkInfo.name.like("%" + parkname + "%")) # 停车场对象
+            for park in  parkobj:
+                park_list.append(park.id)
+            recordsFiltered = CarInOut.query.filter(
+                CarInOut.in_time <= endtime,
+                CarInOut.in_time >= begintime,
+                CarInOut.plate_no.like("%" + carno + "%") if carno is not None else "",
+                CarInOut.park_id.in_(park_list),
+            ).count()  # 过滤后的记录
 
-        if carno:
-            recordsFiltered = CarInOut.query.filter(CarInOut.plate_no.like("%" + carno + "%")).count()  # 过滤后的记录
-            pagination = CarInOut.query.filter(CarInOut.plate_no.like("%" + carno + "%")).order_by(
+            pagination = CarInOut.query.filter(
+                CarInOut.in_time <= endtime,
+                CarInOut.in_time >= begintime,
+                CarInOut.plate_no.like("%" + carno + "%") if carno is not None else "",
+                CarInOut.park_id.in_(park_list),
+            ).order_by(
                 CarInOut.in_time.desc()).paginate(
                 page=page, per_page=length, error_out=True)
         else:
-            recordsFiltered = recordsTotal  # 过滤后的记录
-            pagination = CarInOut.query.order_by(CarInOut.in_time.desc()).paginate(
+            recordsFiltered = CarInOut.query.filter(
+                CarInOut.in_time <= endtime,
+                CarInOut.in_time >= begintime,
+                CarInOut.plate_no.like("%" + carno + "%") if carno is not None else "",
+            ).count()  # 过滤后的记录
+            pagination = CarInOut.query.filter(
+                CarInOut.in_time <= endtime,
+                CarInOut.in_time >= begintime,
+                CarInOut.plate_no.like("%" + carno + "%") if carno is not None else "",
+            ).order_by(
+                CarInOut.in_time.desc()).paginate(
                 page=page, per_page=length, error_out=True)
         cars = pagination.items
         data = []
         for car in cars:
+            # print(car.in_time.strftime("%Y-%m-%d %H:%M:%S"))
+            if car.out_time:
+                out_time = car.out_time.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                out_time = ''
             park_list = {
                 # "id": park.id,
                 "id": car.id,
                 "parkname": car.parkinfo.name,
                 "plate_no": car.plate_no,
-                "in_time": car.in_time,
-                "out_time": car.out_time,
+                "in_time": car.in_time.strftime("%Y-%m-%d %H:%M:%S"),
+                "out_time": out_time,
                 "in_port": car.in_port,
                 "out_port": car.out_port,
             }

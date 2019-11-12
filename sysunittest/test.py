@@ -42,9 +42,15 @@ class DatabaseTest(unittest.TestCase):
         for i in range(30):
             car = CarInOut(
                 id = str(uuid.uuid4()),
-                park_id = '557711d6-2488-4e85-b706-96ed630fbbad',
+                park_id = random.choice(
+                    [
+                        '04762051-2aac-4253-8231-28596d430b2d',
+                        '6378b2d2-9e02-4db0-8601-fce226aa425c',
+                        '2fbb2827-1c70-44d4-ba6a-a226b2c83c97'
+                     ]
+                ),
                 plate_no = newplate(),
-                in_time = randomDate('2019-10-01 12:12:12', '2019-11-05 00:00:00'),
+                in_time = randomDate('2019-11-12 00:00:00', '2019-11-13 00:00:00'),
                 in_port = random.choice([1, 3, 5]),
                 park_state = 0
             )
