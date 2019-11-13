@@ -179,6 +179,28 @@ class MonthlyPay(db.Model):
             self.id, self.apply_id, self.order_id, self.months, self.fee_receipt, self.state
         )
 
+# 用户关联角色
+sys_user_role = db.Table('sys_user_role',
+    db.Column('user_id', db.String(64), db.ForeignKey('sys_user.id'), primary_key=True),
+    db.Column('role_id', db.String(64), db.ForeignKey('sys_role.id'), primary_key=True),
+    db.Column('create_on', db.DateTime, default=datetime.now, comment='创建时间'),
+)
+
+# 角色权限关联
+sys_role_permission = db.Table('sys_role_permission',
+    db.Column('permission_id', db.String(64), db.ForeignKey('sys_permission.id'), primary_key=True),
+    db.Column('role_id', db.String(64), db.ForeignKey('sys_role.id'), primary_key=True),
+    db.Column('create_on', db.DateTime, default=datetime.now, comment='创建时间'),
+)
+
+# 角色菜单关联
+sys_role_menu = db.Table('sys_role_menu',
+    db.Column('role_id', db.String(64), db.ForeignKey('sys_role.id'), primary_key=True),
+    db.Column('menu_id', db.String(64), db.ForeignKey('sys_menu.id'), primary_key=True),
+    db.Column('create_on', db.DateTime, default=datetime.now, comment='创建时间'),
+    db.Column('is_delete', db.Boolean, default=False, comment='是否删除'),
+)
+
 
 class SysRole(db.Model):
     """
@@ -192,7 +214,6 @@ class SysRole(db.Model):
     update_on = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now, comment='修改时间')
     delete_on = db.Column(db.DateTime, comment='删除时间')
     state = db.Column(db.Integer, comment='状态（0删除，1启用）')
-    sysuser = db.relationship('SysUser', backref='sys_role', lazy='dynamic')
 
     def __repr__(self):
         return 'sys_role: id[%s] - name[%s] - permission[%s] - state[%s]' % (
@@ -200,13 +221,42 @@ class SysRole(db.Model):
         )
 
 
+class SysPermission(db.Model):
+    """
+    定义权限表
+    """
+    __tablename__ = 'sys_permission'
+    id = db.Column(db.String(64), primary_key=True, comment='权限ID')
+    name = db.Column(db.String(50), comment='权限名')
+    action = db.Column(db.String(100), unique=True, comment='操作')
+
+    def __repr__(self):
+        return 'sys_permission: id[%s] - name[%s] - action[%s]' % (
+            self.id, self.name, self.action
+        )
+
+class SysMenu(db.Model):
+    """
+    定义菜单表
+    """
+    __tablename__ = 'sys_menu'
+    id = db.Column(db.String(64), primary_key=True, comment='菜单ID')
+    name = db.Column(db.String(50), comment='菜单名')
+    icon = db.Column(db.String(50), comment='菜单图标')
+    url = db.Column(db.String(100), comment='菜单地址')
+    order = db.Column(db.SmallInteger, default=0, comment='菜单级别')
+
+    def __repr__(self):
+        return 'sys_menu: id[%s] - name[%s] - url[%s]' % (
+            self.id, self.name, self.url
+        )
+
 class SysUser(db.Model):
     """
     定义平台管理员信息表
     """
     __tablename__ = 'sys_user'
     id = db.Column(db.String(64), primary_key=True, comment='管理员ID')
-    role_id = db.Column(db.String(64), db.ForeignKey('sys_role.id'))
     nick_name = db.Column(db.String(20), comment='昵称')
     login_name = db.Column(db.String(50), unique=True, comment='登录名')
     password = db.Column(db.String(64), comment='密码')
@@ -217,8 +267,27 @@ class SysUser(db.Model):
     delete_on = db.Column(db.DateTime, comment='删除时间')
     delete_by = db.Column(db.String(20), comment='删除人')
     state = db.Column(db.Integer, comment='状态（0删除，1启用）')
+    roles = db.relationship('SysRole', secondary = sys_user_role, backref='sys_user', lazy='dynamic')
 
     def __repr__(self):
         return 'sys_user: id[%s] - role_id[%s] - login_name[%s] -state[%s]' % (
             self.id, self.role_id, self.login_name, self.state
         )
+
+    # 获取用户权限
+    @property
+    def permissions(self):
+        permissions = SysPermission.query.join(sys_role_permission).join(SysRole).join(sys_user_role).join(SysUser).\
+            filter(
+            SysUser.id == self.id
+        )
+        return permissions
+
+    # 获取用户菜单
+    @property
+    def menus(self):
+        menus = SysMenu.query.join(sys_role_menu).join(SysRole).join(sys_user_role).join(SysUser).\
+            filter(
+            SysUser.id == self.id
+        ).order_by(SysMenu.order).all()
+        return menus

@@ -26,6 +26,9 @@ def login():
     loginform = LoginForm()
     return render_template('parksys/login.html', loginform=loginform)
 
+# 退出
+
+
 # 平台首页
 @parksys.route('/index', methods=['GET'])
 def indexpage():
@@ -297,3 +300,4 @@ def carinout():
         return jsonify(res)
     else:
         return render_template('parksys/carinout.html')
+

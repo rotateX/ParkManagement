@@ -11,23 +11,24 @@ from flask_script import Manager
 from parksys.models import *
 
 
+
 app = Flask(
     __name__,
     template_folder='templates',
     static_folder='static'
 )
 # 导入配置
-# app.config.from_object('config.ProductionConfig')
-app.config.from_object(config.DevelopmentConfig)
+app.config.from_object('config.ProductionConfig')
+# app.config.from_object(config.DevelopmentConfig)
 
 # 注册app
 app.register_blueprint(parksys)
 app.register_blueprint(parkapi)
 
 
-manager = Manager(app)
-Migrate(app, db)
-manager.add_command('db', MigrateCommand)
+# manager = Manager(app)
+# Migrate(app, db)
+# manager.add_command('db', MigrateCommand)
 
 db.init_app(app)
 
@@ -37,7 +38,8 @@ def hello_world():
 
     # return render_template('parksys/base.html')
     return redirect(url_for('parksys.indexpage'))
+
 if __name__ == '__main__':
-    # app.run()
-    manager.run()
+    app.run()
+    #manager.run()
 

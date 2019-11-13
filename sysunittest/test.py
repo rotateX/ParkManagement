@@ -25,6 +25,7 @@ class DatabaseTest(unittest.TestCase):
         self.app = app
         # app.config.from_object(config.DevelopmentConfig)
         app.app_context().push()
+        # db.create_all()
 
     def tearDown(self):
         print('ok')
@@ -32,11 +33,11 @@ class DatabaseTest(unittest.TestCase):
     # 创建停车场
     @unittest.skip
     def test_create_park(self):
-        for i in range(2):
+        for i in range(10):
             park = ParkInfo(
                 id=str(uuid.uuid4()),
-                name='二环路的里面%s' % (random.randint(10,100)),
-                address='厦门市思明区观日路%s号' % (random.randint(10,100)),
+                name='南山%s号停车场' % (random.randint(10,100)),
+                address='致富路%s号' % (random.randint(10,100)),
                 longitude='118.185422',
                 latitude='24.492036',
                 type='1',
@@ -48,19 +49,20 @@ class DatabaseTest(unittest.TestCase):
 
 
     # 创建过车记录
+    # @unittest.skip
     def test_create_car(self):
         for i in range(30):
             car = CarInOut(
                 id = str(uuid.uuid4()),
                 park_id = random.choice(
                     [
-                        '04762051-2aac-4253-8231-28596d430b2d',
-                        '6378b2d2-9e02-4db0-8601-fce226aa425c',
-                        '2fbb2827-1c70-44d4-ba6a-a226b2c83c97'
+                        'b7fb79e7-78c2-42f8-a238-d62f8748429d',
+                        'cbfc83f5-dba8-4e74-b05d-efed3a6661db',
+                        '155acbcb-fd0b-4660-90aa-c3f0184a2b87'
                      ]
                 ),
                 plate_no = newplate(),
-                in_time = randomDate('2019-11-12 00:00:00', '2019-11-13 00:00:00'),
+                in_time = randomDate('2019-11-13 00:00:00', '2019-11-14 00:00:00'),
                 in_port = random.choice([1, 3, 5]),
                 park_state = 0
             )
