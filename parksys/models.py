@@ -3,7 +3,7 @@
 from exts import db
 from datetime import datetime
 from flask_login import UserMixin
-
+from werkzeug.security import generate_password_hash, check_password_hash
 
 sys_user_park = db.Table(
     'sys_user_park',
@@ -21,14 +21,14 @@ class ParkInfo(db.Model):
     name = db.Column(db.String(20), nullable=False, comment='停车场名字')
     contact = db.Column(db.String(10), comment='联系人')
     mobile = db.Column(db.String(15), comment='联系电话')
-    address = db.Column(db.String(50), nullable=False, comment='停车场地址')
+    address = db.Column(db.String(255), nullable=False, comment='停车场地址')
     longitude = db.Column(db.DECIMAL(10, 7), nullable=False, comment='经度')
     latitude = db.Column(db.DECIMAL(10, 7), nullable=False, comment='纬度')
     type = db.Column(db.Integer, nullable=False, comment='停车场类型（0公共，1私人）')
     total_parking_space = db.Column(db.Integer, comment='总车位')
     empty_parking_space = db.Column(db.Integer, comment='空余车位')
     monthly_parking_space = db.Column(db.Integer, comment='月卡车位')
-    charging_rules = db.Column(db.String(100), comment='收费规则')
+    charging_rules = db.Column(db.String(255), comment='收费规则')
     create_on = db.Column(db.DateTime, default=datetime.now, comment='创建时间')
     create_by = db.Column(db.String(20), nullable=False, comment='创建人')
     update_on = db.Column(db.DateTime,  default=datetime.now, onupdate=datetime.now, comment='修改时间')
@@ -37,7 +37,7 @@ class ParkInfo(db.Model):
     delete_by = db.Column(db.String(20), comment='删除人')
     state = db.Column(db.Integer, default=1, comment='状态(0删除，1启用)')
     # ismonthly = db.Column(db.Integer, default=1, comment='是否启用月卡(0不启用，1启用)')
-    remarks = db.Column(db.String(50), comment='备注')
+    remarks = db.Column(db.String(255), comment='备注')
     carinout = db.relationship('CarInOut', backref='parkinfo', lazy='dynamic')
     moncategory = db.relationship('MonthlyCategory', backref='parkinfo', lazy='dynamic')
     sysuser = db.relationship('SysUser', secondary=sys_user_park, backref='parkinfo', lazy='dynamic')
@@ -67,7 +67,7 @@ class CarInOut(db.Model):
     fee_receipt = db.Column(db.DECIMAL(7, 2), comment='实收金额')
     pay_type = db.Column(db.Integer, comment='支付方式（0现金，1微信，2支付宝，3代付，4优惠券）')
     park_state = db.Column(db.Integer, comment='停车状态(0停车中，1停车结束，2异常停车)')
-    remarks = db.Column(db.String(50), comment='备注')
+    remarks = db.Column(db.String(255), comment='备注')
     parkingpay = db.relationship('ParkingPay', backref='carinout', lazy='dynamic')
 
     def __repr__(self):
@@ -92,7 +92,7 @@ class ParkingPay(db.Model):
     create_on = db.Column(db.DateTime, default=datetime.now, comment='创建时间')
     pay_on = db.Column(db.DateTime, comment='支付时间')
     state = db.Column(db.Integer, comment='支付状态（0待支付，1支付完成，2关闭支付）')
-    remarks = db.Column(db.String(50), comment='备注')
+    remarks = db.Column(db.String(255), comment='备注')
 
     def __repr__(self):
         return 'parking_pay: id[%s] - car_id[%s] - 订单号[%s] - 应收[%s] - 实收[%s] - 支付类型[%s] - 状态[%s] ' % (
@@ -131,7 +131,7 @@ class MonthlyApply(db.Model):
     __tablename__ = 'monthly_apply'
     id = db.Column(db.String(64), primary_key=True, comment='月卡申请ID')
     category_id = db.Column(db.String(64), db.ForeignKey('monthly_category.id'))
-    plate_no = db.Column(db.String(1000), nullable=False, comment='月卡车牌')
+    plate_no = db.Column(db.String(2550), nullable=False, comment='月卡车牌')
     begin_date = db.Column(db.Date, nullable=False, comment='开始日期')
     end_date = db.Column(db.Date, nullable=False, comment='结束日期')
     price = db.Column(db.DECIMAL(7, 2), nullable=False, comment='月卡单价')
@@ -144,7 +144,7 @@ class MonthlyApply(db.Model):
     delete_on = db.Column(db.DateTime, comment='删除时间')
     delete_by = db.Column(db.String(20), comment='删除人')
     state = db.Column(db.Integer, comment='状态（0删除，1启用，2过期）')
-    remarks = db.Column(db.String(50), comment='备注')
+    remarks = db.Column(db.String(255), comment='备注')
     monpay = db.relationship('MonthlyPay', backref='monthly_apply', lazy='dynamic')
 
     def __repr__(self):
@@ -209,7 +209,6 @@ class SysRole(db.Model):
     __tablename__ = 'sys_role'
     id = db.Column(db.String(64), primary_key=True, comment='角色ID')
     name = db.Column(db.String(20), comment='角色名称')
-    permission = db.Column(db.Integer, comment='权限值')
     create_on = db.Column(db.DateTime, default=datetime.now, comment='创建时间')
     update_on = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now, comment='修改时间')
     delete_on = db.Column(db.DateTime, comment='删除时间')
@@ -228,7 +227,7 @@ class SysPermission(db.Model):
     __tablename__ = 'sys_permission'
     id = db.Column(db.String(64), primary_key=True, comment='权限ID')
     name = db.Column(db.String(50), comment='权限名')
-    action = db.Column(db.String(100), unique=True, comment='操作')
+    action = db.Column(db.String(255), comment='操作')
 
     def __repr__(self):
         return 'sys_permission: id[%s] - name[%s] - action[%s]' % (
@@ -243,7 +242,7 @@ class SysMenu(db.Model):
     id = db.Column(db.String(64), primary_key=True, comment='菜单ID')
     name = db.Column(db.String(50), comment='菜单名')
     icon = db.Column(db.String(50), comment='菜单图标')
-    url = db.Column(db.String(100), comment='菜单地址')
+    url = db.Column(db.String(255), comment='菜单地址')
     order = db.Column(db.SmallInteger, default=0, comment='菜单级别')
 
     def __repr__(self):
@@ -258,8 +257,8 @@ class SysUser(db.Model):
     __tablename__ = 'sys_user'
     id = db.Column(db.String(64), primary_key=True, comment='管理员ID')
     nick_name = db.Column(db.String(20), comment='昵称')
-    login_name = db.Column(db.String(50), unique=True, comment='登录名')
-    password = db.Column(db.String(64), comment='密码')
+    login_name = db.Column(db.String(50), nullable=False, unique=True, comment='登录名')
+    password_hash = db.Column(db.String(255), nullable=False, comment='密码')
     create_on = db.Column(db.DateTime, default=datetime.now, comment='创建时间')
     create_by = db.Column(db.String(20), comment='创建人')
     update_on = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now, comment='修改时间')
@@ -267,12 +266,27 @@ class SysUser(db.Model):
     delete_on = db.Column(db.DateTime, comment='删除时间')
     delete_by = db.Column(db.String(20), comment='删除人')
     state = db.Column(db.Integer, comment='状态（0删除，1启用）')
+    remarks = db.Column(db.String(255), comment='备注')
     roles = db.relationship('SysRole', secondary = sys_user_role, backref='sys_user', lazy='dynamic')
 
     def __repr__(self):
         return 'sys_user: id[%s] - role_id[%s] - login_name[%s] -state[%s]' % (
             self.id, self.role_id, self.login_name, self.state
         )
+
+    @property
+    def password(self):
+        raise AttributeError('密码不能读取')
+
+    # 密码加密
+    @password.setter
+    def password(self, pwdvaule):
+        self.password_hash = generate_password_hash(pwdvaule)
+
+    # 验证密码
+    def check_password(self, pwdvalue):
+        return check_password_hash(self.password_hash, pwdvalue)
+
 
     # 获取用户权限
     @property

@@ -28,6 +28,8 @@ class DatabaseTest(unittest.TestCase):
         # db.create_all()
 
     def tearDown(self):
+        # db.session.remove()
+        # db.drop_all()
         print('ok')
 
     # 创建停车场
@@ -56,13 +58,13 @@ class DatabaseTest(unittest.TestCase):
                 id = str(uuid.uuid4()),
                 park_id = random.choice(
                     [
-                        'b7fb79e7-78c2-42f8-a238-d62f8748429d',
-                        'cbfc83f5-dba8-4e74-b05d-efed3a6661db',
-                        '155acbcb-fd0b-4660-90aa-c3f0184a2b87'
+                        '83b87392-79af-4857-951b-cad84879ded2',
+                        '8ef819ee-c12e-4446-b2ae-c45f636c2596',
+                        'fcb0c368-5e40-42d5-9212-f53253986484'
                      ]
                 ),
                 plate_no = newplate(),
-                in_time = randomDate('2019-11-13 00:00:00', '2019-11-14 00:00:00'),
+                in_time = randomDate('2019-11-14 00:00:00', '2019-11-15 00:00:00'),
                 in_port = random.choice([1, 3, 5]),
                 park_state = 0
             )
