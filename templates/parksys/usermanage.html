@@ -10,12 +10,12 @@
 {% block contentheader %}
     <div class="row mb-2">
         <div class="col-sm-6">
-            <h1 class="m-0 text-dark">停车场信息</h1>
+            <h1 class="m-0 text-dark">用户管理</h1>
         </div><!-- /.col -->
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="{{ url_for('parksys.indexpage') }}">首页</a></li>
-                <li class="breadcrumb-item active">停车场信息</li>
+                <li class="breadcrumb-item active">用户管理</li>
             </ol>
         </div><!-- /.col -->
     </div><!-- /.row -->
@@ -44,11 +44,9 @@
                             <li style="display:inline-block"><a href="#">
                                 <button type="button" class="btn btn-block btn-default">导出</button>
                             </a></li>
-                            {#                            <li style="display:inline-block"><input type="text" class="form-control"></li>#}
-                            {#                            <li style="display:inline-block"><a href="#"><button type="button" class="btn btn-block btn-default" id="search">查询</button></a></li>#}
                             <li style="display: inline-block">
                                 <div class="input-group input-group-md">
-                                    <input type="text" class="form-control" id="searchkey" placeholder="请输入停车场名称">
+                                    <input type="text" class="form-control" id="searchkey" placeholder="请输入账号">
                                     <span class="input-group-append">
                                     <button type="button" class="btn btn-info btn-flat" id="search">查询</button>
                                   </span>
@@ -56,15 +54,17 @@
                             </li>
                         </ul>
                     </div>
-                    <table id="parkdata" class="table table-bordered table-hover">
+                    <table id="userdata" class="table table-bordered table-hover">
                         <thead>
                         <tr>
-                            <!--th>编号</th-->
-                            <th>名称</th>
-                            <th>地址</th>
-                            <th>联系人</th>
-                            <th>类型</th>
-                            <th>状态</th>
+{#                            <th>编号</th>#}
+                            <th>登录名</th>
+                            <th>昵称</th>
+                            <th>角色</th>
+                            <th>创建时间</th>
+                            <th>登录时间</th>
+                            <th>备注</th>
+                            <th>操作</th>
                         </tr>
                         </thead>
                     </table>
@@ -85,6 +85,18 @@
     <script src="{{ url_for('static', filename='plugins/datatables-select/js/dataTables.select.js') }}"></script>
     <!-- page script -->
     <script>
+        // 编辑行
+        function editUser(rowid) {
+            alert(rowid);
+        }
+        // 删除行
+        function delUser(rowid) {
+            alert(rowid);
+        }
+        // 重置密码
+        function updatePwd(rowid) {
+            alert(rowid);
+        }
         {#    全局搜索变量，查询#}
         var searchkey = '';
         $("#search").click(function () {
@@ -98,13 +110,13 @@
         });
         var reloadDatatables = function () {
             // 初始化  datatables
-            var tables = $('#parkdata').DataTable({
-                select: 'single',
+            var tables = $('#userdata').DataTable({
+                {#select: 'single',#}
                 destroy: true,
                 searching: false,
                 ordering: false,
                 'bAutoWidth': false,
-                "bProcessing":true,
+                "bProcessing":true, // 显示加载中
                 "pagingType": "full_numbers",
                 "language": {"url": "{{ url_for('static', filename='plugins/datatables/language.json') }}"},
                 "serverSide": true, //开启服务器模式
@@ -115,22 +127,11 @@
                     param.length = data.length;
                     param.page = param.start / param.length + 1; //计算页码
                     param.search = searchkey;
-                    //if (searchstr.length > 0) {
-                    //    param.search = searchstr;
-                    //} else {
-                    //    param.search = '';
-                    //    console.log('无搜索参数')
-                    //}
-                    //param.page = 1; //计算页码
-                    //console.log('为转换前： ' + typeof param);
-                    //console.log('为转换前： ' + param);
-                    //console.log('转换为stringify' + JSON.stringify(param));
-                    //console.log('转换为stringify type ' + typeof JSON.stringify(param));
                     var paramString = JSON.stringify(param);
                     console.log('paramString: ' + paramString);
                     $.ajax({
                         type: "POST",
-                        url: "{{ url_for('parksys.getpark') }}",
+                        url: "{{ url_for('parksys.usermanage') }}",
                         data: paramString,
                         dataType: 'json',
                         success: function (res) {
@@ -148,60 +149,39 @@
                     })
                 },
                 "columns": [
-                    //{"data": "id"},
-                    {"data": "name"},
-                    {"data": "addr"},
-                    {"data": "contact"},
-                    {
-                        "data": "type",
-                        "render": function (data, type, full, meta) {
-                            if (data === 0) {
-                                return data = '公共';
-                            } else {
-                                return data = '私人';
-                            }
-                        }
-                    },
-                    {
-                        "data": "state",
-                        "render": function (data, type, full, meta) {
-                            if (data === 1) {
-                                return data = '启用';
-                            }
-                        }
-                    },
-                ]
+                    {#{"data": "id"},#}
+                    {"data": "login_name"},
+                    {"data": "nick_name"},
+                    {"data": "user_role"},
+                    {"data": "create_on"},
+                    {"data": "pre_login"},
+                    {"data": "remarks"},
+                ],
+                columnDefs: [{
+                    //   指定第最后一列
+                    targets: 6,
+                    render: function(data, type, row, meta) {
+                        return data = '<button class="btn btn-info btn-sm" onclick=updatePwd("'+row.id+'")><i class="fas fa-lock"></i>密码</button>'
+                  + '<button class="btn btn-danger btn-sm" onclick=delUser("'+row.id+'")><i class="far fa-trash-alt"></i>删除</button>' +
+                            '<button class="btn btn-success btn-sm" onclick=editUser("'+row.id+'")> <i class="fas fa-user-edit"></i>编辑</button>';
+                    }
+                }]
             });
-            // 行选中
-            var parkcode = '';
-            $('#parkdata tbody').on('click', 'tr', function () {
-                {#alert($(this).hasClass('selected'));#}
-                if ($(this).hasClass('selected')) {
-                    // 这个点击的时候如果有selected,该次点击则取消selected,parkid置空
-                    parkcode = '';
-                    console.log('取消选择');
-                } else {
-                    parkcode = tables.row(this).id();
-                    console.log('选中' + parkcode);
-                }
-            });
-            // 查询
-            //$('#search').click(function () {
-                {#tables.draw();#}
-            //    reloadDatatables()
-            //});
+
+
+
             // 绑定删除按钮，删除停车场
             var delbut = document.querySelector('#delbut');
             delbut.onclick = function () {
-                if (parkcode !== '') {
+                if (usercode !== '') {
                     var con = confirm('确认删除吗？');
-                    console.log('准备删除id: ' + parkcode);
-                    console.log('parkcode=' + parkcode);
+                    console.log('准备删除id: ' + usercode);
+                    console.log('parkcode=' + usercode);
                     if (con === true) {
                         $.ajax({
                             url: '{{ url_for('parksys.delpark') }}',
                             type: 'POST',
-                            data: parkcode,
+                            data: usercode,
                             dataType: 'json',
                             success: function (res) {
                                 if (res['status'] === 'success') {
@@ -219,12 +199,13 @@
                     alert('请选择要删除的停车场！');
                 }
             };
+
             // 跳转到信息修改页面
             var update = document.querySelector('#update');
             update.onclick = function () {
-                if (parkcode !== '') {
-                    console.log('{{ url_for('parksys.updatepark') }}?parkcode=' + parkcode);
-                    window.location.href = '{{ url_for('parksys.updatepark') }}?parkcode=' + parkcode;
+                if (usercode !== '') {
+                    console.log('{{ url_for('parksys.updatepark') }}?parkcode=' + usercode);
+                    window.location.href = '{{ url_for('parksys.updatepark') }}?parkcode=' + usercode;
                 } else {
                     alert('请选择要修改的停车场！');
                 }

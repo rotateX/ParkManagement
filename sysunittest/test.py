@@ -51,7 +51,7 @@ class DatabaseTest(unittest.TestCase):
 
 
     # 创建过车记录
-    # @unittest.skip
+    @unittest.skip
     def test_create_car(self):
         for i in range(30):
             car = CarInOut(
@@ -70,5 +70,32 @@ class DatabaseTest(unittest.TestCase):
             )
             db.session.add(car)
             db.session.commit()
+
+    # 创建角色
+    @unittest.skip
+    def test_create_role(self):
+        role = SysRole(
+            id = str(uuid.uuid4()),
+            name = '停车场商家',
+            state = 1,
+        )
+        db.session.add(role)
+        db.session.commit()
+
+    # 创建用户
+    @unittest.skip
+    def test_create_user(self):
+        user = SysUser(
+            id = str(uuid.uuid4()),
+            nick_name = '测试场',
+            login_name = 'park2019@test',
+            state = 1,
+        )
+        user.password = 'a'
+        role = SysRole.query.get('11c60a2b-0561-4f9a-980d-caefcd63c659')
+        user.roles.append(role)
+        db.session.add(user)
+        db.session.commit()
+
 if __name__ == '__main__':
     unittest.main()

@@ -39,15 +39,15 @@ def indexpage():
 @parksys.route('/parkinfo', methods=['GET', 'POST'])
 def getpark():
     if request.method == 'POST':
-        parkdata = json.loads(request.get_data())
+        postdata = json.loads(request.get_data())
         # print(parkdata)
         # print(type(parkdata))
-        draw = parkdata['draw']
-        start = parkdata['start']
-        length = parkdata['length']
+        draw = postdata['draw']
+        start = postdata['start']
+        length = postdata['length']
         # page = start // length + 1  # 计算页码
-        page = parkdata['page']
-        searchstr = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', parkdata['search'])) # 过滤特殊字符
+        page = postdata['page']
+        searchstr = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', postdata['search'])) # 过滤特殊字符
         recordsTotal = ParkInfo.query.filter(ParkInfo.state == 1).count()  # 未过滤记录数
         if searchstr:
             recordsFiltered = ParkInfo.query.filter(ParkInfo.state==1, ParkInfo.name.like("%" + searchstr + "%")).count() # 过滤后的记录
@@ -214,17 +214,17 @@ def updating(parkcode):
 @parksys.route('/carinout', methods=['GET', 'POST'])
 def carinout():
     if request.method == 'POST':
-        parkdata = json.loads(request.get_data())
-        draw = parkdata['draw']
-        start = parkdata['start']
-        length = parkdata['length']
+        postdata = json.loads(request.get_data())
+        draw = postdata['draw']
+        start = postdata['start']
+        length = postdata['length']
         # page = start // length + 1  # 计算页码
-        page = parkdata['page']
-        carno = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', parkdata['carno']))  # 只提取中文、英文、数字
-        parkname = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', parkdata['parkname']))
+        page = postdata['page']
+        carno = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', postdata['carno']))  # 只提取中文、英文、数字
+        parkname = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', postdata['parkname']))
         try:
-            begintime = datetime.datetime.strptime(parkdata['begintime'], "%Y-%m-%d %H:%M:%S")
-            endtime = datetime.datetime.strptime(parkdata['endtime'], "%Y-%m-%d %H:%M:%S")
+            begintime = datetime.datetime.strptime(postdata['begintime'], "%Y-%m-%d %H:%M:%S")
+            endtime = datetime.datetime.strptime(postdata['endtime'], "%Y-%m-%d %H:%M:%S")
         except Exception as errstrtime:
             # 获取不到时间时默认请求当天数据
             now = datetime.datetime.now()
@@ -301,3 +301,62 @@ def carinout():
     else:
         return render_template('parksys/carinout.html')
 
+
+# 用户管理
+@parksys.route('/usermanage', methods=['POST', 'GET'])
+def usermanage():
+    if request.method == 'POST':
+        postdata = json.loads(request.get_data())
+        # print(parkdata)
+        # print(type(parkdata))
+        draw = postdata['draw']
+        start = postdata['start']
+        length = postdata['length']
+        # page = start // length + 1  # 计算页码
+        page = postdata['page']
+        searchstr = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', postdata['search'])) # 过滤特殊字符
+        recordsTotal = SysUser.query.filter(SysUser.state == 1).count()  # 未过滤记录数
+        if searchstr:
+            recordsFiltered = SysUser.query.filter(SysUser.state==1, SysUser.login_name.like("%" + searchstr + "%")).count() # 过滤后的记录
+            pagination = SysUser.query.filter(SysUser.state==1, SysUser.login_name.like("%" + searchstr + "%")).order_by(SysUser.create_on.desc()).paginate(
+                page=page, per_page=length, error_out=True)
+        else:
+            recordsFiltered = SysUser.query.filter(SysUser.state==1).count() # 过滤后的记录
+            pagination = SysUser.query.filter(SysUser.state==1).order_by(SysUser.create_on.desc()).paginate(
+                page=page, per_page=length, error_out=True)
+        users = pagination.items
+        data = []
+        for user in users:
+            roles = user.roles
+            roles_list = []
+            for role in roles:
+                roles_list.append(role.name)
+            user_list = {
+                "id": user.id,
+                "nick_name": user.nick_name,
+                "login_name": user.login_name,
+                "user_role": roles_list,
+                "create_on": user.create_on.strftime("%Y-%m-%d %H:%M:%S"),
+                "pre_login": '',
+                "remarks": user.remarks,
+                "DT_RowId": user.id,
+            }
+            data.append(user_list)
+        res = {
+            'draw': draw,
+            'recordsTotal': recordsTotal,
+            'recordsFiltered': recordsFiltered,
+            'data': data,
+        }
+        print(jsonify(res))
+        return jsonify(res)
+    else:
+        return render_template('parksys/usermanage.html')
+
+# 修改用户密码
+@parksys.route('/updatepwd', methods=['POST'])
+def updatepwd():
+    if request.method == 'POST':
+        postdata = json.loads(request.get_data())
+
+    pass
