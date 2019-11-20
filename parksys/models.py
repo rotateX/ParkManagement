@@ -4,6 +4,9 @@ from exts import db
 from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from logger import Logger
+
+logger = Logger(logger='parksys.models').getlog()
 
 sys_user_park = db.Table(
     'sys_user_park',
@@ -270,8 +273,8 @@ class SysUser(db.Model):
     roles = db.relationship('SysRole', secondary = sys_user_role, backref='sys_user', lazy='dynamic')
 
     def __repr__(self):
-        return 'sys_user: id[%s] - role_id[%s] - login_name[%s] -state[%s]' % (
-            self.id, self.role_id, self.login_name, self.state
+        return 'sys_user: id[%s] - login_name[%s] -state[%s]' % (
+            self.id, self.login_name, self.state
         )
 
     @property
@@ -287,6 +290,23 @@ class SysUser(db.Model):
     def check_password(self, pwdvalue):
         return check_password_hash(self.password_hash, pwdvalue)
 
+    # 获取用户角色
+    @property
+    def getroles(self):
+        roles = []
+        for role in self.roles:
+            roleid = role.id
+            roles.append(roleid)
+        return roles
+
+    # 获取用户关联停车场
+    @property
+    def getparks(self):
+        parks = []
+        for park in self.parkinfo:
+            parkid = park.id
+            parks.append(parkid)
+        return parks
 
     # 获取用户权限
     @property
@@ -297,6 +317,50 @@ class SysUser(db.Model):
         )
         return permissions
 
+    # 用户关联
+    def getrelation(self, newlist, prelist, sign):
+        """
+        :param newlist: 最新提交关联
+        :param prelist: 原始关联
+        :param sign: 0-SysRole, 1-ParkInfo
+        :return:
+        """
+        if len(newlist)>len(prelist):  # 判断用户角色是否已关联
+            diffitems = set(newlist).difference(set(prelist))
+            for item in diffitems:
+                if sign == 0:
+                    diffobj = SysRole.query.get(item)
+                    self.roles.append(diffobj)
+                elif sign == 1:
+                    diffobj = ParkInfo.query.get(item)
+                    self.parkinfo.append(diffobj)
+                try:
+                    db.session.commit()
+                    logger.info('用户<%s>关联角色<%s>成功：' % (self.login_name, diffobj.name))
+                    return ('关联成功')
+                except Exception as e:
+                    logger.error('用户<%s>关联角色<%s>出错，错误：%s' % (self.login_name, diffobj.name, str(e)))
+                    return str(e)
+        elif len(newlist)<len(prelist):
+            diffitems = set(prelist).difference(set(newlist))
+            for item in diffitems:
+                if sign == 0:
+                    diffobj = SysRole.query.get(item)
+                    self.roles.remove(diffobj)
+                elif sign == 1:
+                    diffobj = ParkInfo.query.get(item)
+                    self.parkinfo.remove(diffobj)
+                try:
+                    db.session.commit()
+                    logger.info('用户<%s>关联角色<%s>失败：' % (self.login_name, diffobj.name))
+                    return ('关联成功')
+                except Exception as e:
+                    logger.error('用户<%s>关联角色<%s>出错，错误：%s' % (self.login_name, diffobj.name, str(e)))
+                    return str(e)
+        else:
+            logger.info('用户<%s>已关联角色关联' % self.login_name)
+            return ('无需重复关联')
+
     # 获取用户菜单
     @property
     def menus(self):
@@ -305,3 +369,4 @@ class SysUser(db.Model):
             SysUser.id == self.id
         ).order_by(SysMenu.order).all()
         return menus
+

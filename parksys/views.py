@@ -3,12 +3,13 @@
 from flask import Blueprint
 from flask import Flask, url_for, render_template, redirect, request, flash, jsonify
 from parksys.models import *
-from parksys.parkdataform import ParkDataForm, LoginForm
+from parksys.parkdataform import ParkDataForm, LoginForm, SysUserForm, AddUser
 import json
 import uuid
 from logger import Logger
 import datetime
 import re
+from operator import and_
 
 logger = Logger(logger='parksys').getlog()
 
@@ -20,11 +21,13 @@ parksys = Blueprint(
     static_folder='static'
 )
 
+
 # 登录页面
 @parksys.route('/login', methods=['GET', 'POST'])
 def login():
     loginform = LoginForm()
     return render_template('parksys/login.html', loginform=loginform)
+
 
 # 退出
 
@@ -47,15 +50,17 @@ def getpark():
         length = postdata['length']
         # page = start // length + 1  # 计算页码
         page = postdata['page']
-        searchstr = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', postdata['search'])) # 过滤特殊字符
+        searchstr = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', postdata['search']))  # 过滤特殊字符
         recordsTotal = ParkInfo.query.filter(ParkInfo.state == 1).count()  # 未过滤记录数
         if searchstr:
-            recordsFiltered = ParkInfo.query.filter(ParkInfo.state==1, ParkInfo.name.like("%" + searchstr + "%")).count() # 过滤后的记录
-            pagination = ParkInfo.query.filter(ParkInfo.state==1, ParkInfo.name.like("%" + searchstr + "%")).order_by(ParkInfo.create_on.desc()).paginate(
+            recordsFiltered = ParkInfo.query.filter(ParkInfo.state == 1,
+                                                    ParkInfo.name.like("%" + searchstr + "%")).count()  # 过滤后的记录
+            pagination = ParkInfo.query.filter(ParkInfo.state == 1, ParkInfo.name.like("%" + searchstr + "%")).order_by(
+                ParkInfo.create_on.desc()).paginate(
                 page=page, per_page=length, error_out=True)
         else:
-            recordsFiltered = ParkInfo.query.filter(ParkInfo.state==1).count() # 过滤后的记录
-            pagination = ParkInfo.query.filter(ParkInfo.state==1).order_by(ParkInfo.create_on.desc()).paginate(
+            recordsFiltered = ParkInfo.query.filter(ParkInfo.state == 1).count()  # 过滤后的记录
+            pagination = ParkInfo.query.filter(ParkInfo.state == 1).order_by(ParkInfo.create_on.desc()).paginate(
                 page=page, per_page=length, error_out=True)
         parks = pagination.items
         data = []
@@ -240,8 +245,8 @@ def carinout():
         ).count()
         if parkname:
             park_list = []
-            parkobj = ParkInfo.query.filter(ParkInfo.name.like("%" + parkname + "%")) # 停车场对象
-            for park in  parkobj:
+            parkobj = ParkInfo.query.filter(ParkInfo.name.like("%" + parkname + "%"))  # 停车场对象
+            for park in parkobj:
                 park_list.append(park.id)
             recordsFiltered = CarInOut.query.filter(
                 CarInOut.in_time <= endtime,
@@ -314,15 +319,18 @@ def usermanage():
         length = postdata['length']
         # page = start // length + 1  # 计算页码
         page = postdata['page']
-        searchstr = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', postdata['search'])) # 过滤特殊字符
+        searchstr = ''.join(re.findall('[\u4e00-\u9fa5a-zA-Z0-9]+', postdata['search']))  # 过滤特殊字符
         recordsTotal = SysUser.query.filter(SysUser.state == 1).count()  # 未过滤记录数
         if searchstr:
-            recordsFiltered = SysUser.query.filter(SysUser.state==1, SysUser.login_name.like("%" + searchstr + "%")).count() # 过滤后的记录
-            pagination = SysUser.query.filter(SysUser.state==1, SysUser.login_name.like("%" + searchstr + "%")).order_by(SysUser.create_on.desc()).paginate(
+            recordsFiltered = SysUser.query.filter(SysUser.state == 1,
+                                                   SysUser.login_name.like("%" + searchstr + "%")).count()  # 过滤后的记录
+            pagination = SysUser.query.filter(SysUser.state == 1,
+                                              SysUser.login_name.like("%" + searchstr + "%")).order_by(
+                SysUser.create_on.desc()).paginate(
                 page=page, per_page=length, error_out=True)
         else:
-            recordsFiltered = SysUser.query.filter(SysUser.state==1).count() # 过滤后的记录
-            pagination = SysUser.query.filter(SysUser.state==1).order_by(SysUser.create_on.desc()).paginate(
+            recordsFiltered = SysUser.query.filter(SysUser.state == 1).count()  # 过滤后的记录
+            pagination = SysUser.query.filter(SysUser.state == 1).order_by(SysUser.create_on.desc()).paginate(
                 page=page, per_page=length, error_out=True)
         users = pagination.items
         data = []
@@ -353,10 +361,152 @@ def usermanage():
     else:
         return render_template('parksys/usermanage.html')
 
+
 # 修改用户密码
 @parksys.route('/updatepwd', methods=['POST'])
 def updatepwd():
+    res = {}
     if request.method == 'POST':
         postdata = json.loads(request.get_data())
+        userid = postdata['userid']
+        conpwd = postdata['conpwd']
+        newpwd = postdata['newpwd']
+        if conpwd == newpwd and conpwd:
+            user = SysUser.query.get(userid)
+            user.password = newpwd
+            try:
+                db.session.commit()
+                res['status'] = 'success'
+            except Exception as err:
+                res['status'] = 'error'
+                logger.error('重置密码出错, 错误内容：' + str(err))
+        else:
+            res['status'] = 'failed'
+    else:
+        res['status'] = 'error'
+    return res
 
-    pass
+
+# 删除用户
+@parksys.route('/deluser', methods=['POST'])
+def deluser():
+    res = {}
+    if request.method == 'POST':
+        postdata = request.get_data()
+        user = SysUser.query.get(postdata)
+        try:
+            user.state = 0
+            db.session.commit()
+            res['status'] = 'success'
+        except Exception as err:
+            res['status'] = 'error'
+            logger.error('删除错误，错误内容：' + str(err))
+    else:
+        res['status'] = 'error'
+    return res
+
+
+# 编辑用户
+@parksys.route('/userdetail/', methods=['GET'])
+def userdetail():
+    userform = SysUserForm()
+    if request.method == 'GET':
+        user_id = request.args.get('user')
+        print('updatepark: ' + user_id)
+        user = SysUser.query.get(user_id)
+        if user:
+            return render_template('parksys/updateuser.html', user=user, userform=userform)
+        else:
+            return redirect(url_for('parksys.getpark'))
+
+
+# 修改用户信息
+@parksys.route('/userupdate/<userid>', methods=['POST'])
+def userupdate(userid):
+    userform = SysUserForm()
+    res = {}
+    # print('打印parkcode: ' + parkcode)
+    # print('打印接收的dataform: ')
+    # print(userform.data)
+    if userform.validate_on_submit():
+        newlgname = userform.login_name.data.strip()
+        is_exist = SysUser.query.filter(and_(SysUser.id != userid, SysUser.login_name == newlgname))
+        is_exist_list = []
+        for i in is_exist:
+            is_exist_list.append(i)
+        print(is_exist_list)
+        if is_exist_list:
+            res['status'] = 'nameerror'
+        else:
+            user = SysUser.query.get(userid)
+            user.login_name = userform.login_name.data.strip()
+            user.nick_name = userform.nick_name.data.strip()
+            prerole = user.getroles  # 原始role关联
+            prepark = user.getparks  # 原始park关联
+            roles = userform.role_type.data
+            parks = userform.park_relation.data
+            user.remarks = userform.user_remarks.data
+            user.getrelation(roles, prerole, 0)  # 关联role
+            user.getrelation(parks, prepark, 1)  # 关联park
+            try:
+                db.session.commit()
+                # print('保存成功')
+                logger.info('updating - <%s> 用户信息修改成功' % user.login_name)
+                res['status'] = 'success'
+            except Exception as err:
+                res['status'] = 'error'
+                # print('写入数据库失败')
+                logger.info('updating - <%s> 用户信息修改失败，错误： %s' % (user.login_name, str(err)))
+                # print(err)
+    else:
+        res['status'] = 'failed'
+        res['message'] = userform.get_errors()
+        # print(res['message'])
+    return jsonify(res)
+
+
+# 创建用户
+@parksys.route('/adduser', methods=['GET', 'POST'])
+def adduser():
+    if request.method == 'POST':
+        res = {}
+        userform = AddUser()
+        if userform.validate_on_submit():
+            newlgname = userform.login_name.data.strip()
+            is_exist = SysUser.query.filter(SysUser.login_name == newlgname)
+            is_exist_list = []
+            for i in is_exist:
+                is_exist_list.append(i)
+            print(is_exist_list)
+            if is_exist_list:
+                res['status'] = 'nameerror'
+            else:
+                user = SysUser()
+                user.id = str(uuid.uuid4())
+                user.login_name = userform.login_name.data.strip()
+                user.nick_name = userform.nick_name.data.strip()
+                user.password = userform.conpwd.data.strip()
+                user.state = 1
+                roles = userform.role_type.data
+                parks = userform.park_relation.data
+                prerole, prepark = [], []
+                user.getrelation(roles, prerole, 0)  # 关联role
+                user.getrelation(parks, prepark, 1)  # 关联park
+                try:
+                    db.session.add(user)
+                    db.session.commit()
+                    # print('用户添加成功')
+                    logger.info('updating - <%s> 用户添加成功' % user.login_name)
+                    res['status'] = 'success'
+                except Exception as err:
+                    res['status'] = 'error'
+                    # print('写入数据库失败')
+                    logger.info('updating - <%s> 用户添加失败，错误： %s' % (user.login_name, str(err)))
+                    # print(err)
+        else:
+            res['status'] = 'failed'
+            res['message'] = userform.get_errors()
+        return res
+    else:
+        userform = AddUser()
+        return render_template('parksys/adduser.html', userform=userform)

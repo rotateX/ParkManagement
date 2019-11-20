@@ -5,6 +5,11 @@
           href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
     <link rel="stylesheet"
           href="{{ url_for('static', filename='plugins/datatables-select/css/select.bootstrap4.css') }}">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') }}">
+    <!-- Toastr -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/toastr/toastr.min.css') }}">
 
 {% endblock %}
 {% block contentheader %}
@@ -32,14 +37,10 @@
                 <div class="card-body">
                     <div class="col-md-12">
                         <ul class="list-inline">
-                            <li style="display:inline-block"><a href="{{ url_for('parksys.newpark') }}">
-                                <button type="button" class="btn btn-block btn-default">添加</button>
-                            </a></li>
-                            <li style="display:inline-block"><a href="#">
-                                <button type="button" class="btn btn-block btn-default" id="update">修改</button>
-                            </a></li>
-                            <li style="display:inline-block"><a href="#">
-                                <button type="button" class="btn btn-block btn-default" id="delbut">删除</button>
+                            <li style="display:inline-block"><a href="{{ url_for('parksys.adduser') }}">
+                                <button type="button" class="btn btn-block btn-default">
+                                    添加
+                                </button>
                             </a></li>
                             <li style="display:inline-block"><a href="#">
                                 <button type="button" class="btn btn-block btn-default">导出</button>
@@ -54,10 +55,59 @@
                             </li>
                         </ul>
                     </div>
+                    <div class="modal fade" id="updatepwd">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title">重置密码</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                                            id="closepwd">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <label for="inputpwd" class=“form-inline”>新密码:</label>
+                                    <input type="password" id="newpwd" class="form-control" placeholder="请设置登录密码">
+                                    <label for="confirmpwd" class=“form-inline”>确认密码:</label>
+                                    <input type="password" id="conpwd" class="form-control" placeholder="请再次填写密码">
+                                </div>
+                                <div class="modal-footer justify-content-between">
+                                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">取消
+                                    </button>
+                                    <button type="button" class="btn btn-primary" id="savepwd">保存</button>
+                                </div>
+                            </div>
+                            <!-- /.modal-content -->
+                        </div>
+                        <!-- /.modal-dialog -->
+                    </div>
+                    <div class="modal fade" id="deluser">
+                        <div class="modal-dialog modal-sm">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title">删除用户</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                                            id="closeuser">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>确定删除该用户吗？</p>
+                                </div>
+                                <div class="modal-footer justify-content-between">
+                                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">取消
+                                    </button>
+                                    <button type="button" class="btn btn-primary" id="condel">确定</button>
+                                </div>
+                            </div>
+                            <!-- /.modal-content -->
+                        </div>
+                        <!-- /.modal-dialog -->
+                    </div>
                     <table id="userdata" class="table table-bordered table-hover">
                         <thead>
                         <tr>
-{#                            <th>编号</th>#}
+                            {#                            <th>编号</th>#}
                             <th>登录名</th>
                             <th>昵称</th>
                             <th>角色</th>
@@ -83,19 +133,116 @@
     <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.js') }}"></script>
     <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
     <script src="{{ url_for('static', filename='plugins/datatables-select/js/dataTables.select.js') }}"></script>
+    <!-- SweetAlert2 -->
+    <script src="{{ url_for('static', filename='plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+    <!-- Toastr -->
+    <script src="{{ url_for('static', filename='plugins/toastr/toastr.min.js') }}"></script>
     <!-- page script -->
     <script>
-        // 编辑行
-        function editUser(rowid) {
-            alert(rowid);
+        var row_id = '';
+
+        function getRowId(rowid) {
+            row_id = rowid;
+            return row_id;
         }
-        // 删除行
-        function delUser(rowid) {
-            alert(rowid);
-        }
-        // 重置密码
-        function updatePwd(rowid) {
-            alert(rowid);
+
+        // 密码重置
+        $("#savepwd").click(function () {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-center',
+                showConfirmButton: false,
+                timer: 2000
+            });
+            var param = {};
+            var newpwd = $('#newpwd').val();
+            var conpwd = $('#conpwd').val();
+            param.newpwd = newpwd;
+            param.conpwd = conpwd;
+            param.userid = row_id;
+            var paramString = JSON.stringify(param);
+            if (newpwd == conpwd && newpwd.length > 0 && conpwd.length > 0) {
+                $.ajax({
+                    url: '{{ url_for('parksys.updatepwd') }}',
+                    type: 'POST',
+                    data: paramString,
+                    dataType: 'json',
+                    success: function (res) {
+                        console.log(res);
+                        if (res['status'] === 'success') {
+                            $('#closepwd').click();
+                            Toast.fire({
+                                type: 'success',
+                                title: '密码重置成功.'
+                            });
+                        } else if (res['status'] === 'failed'){
+                            Toast.fire({
+                                type: 'error',
+                                title: '密码不一致或为空，请重试！'
+                            });
+                        } else {
+                            $('#closeuser').click();
+                            Toast.fire({
+                                type: 'error',
+                                title: '密码重置失败！'
+                            });
+                        }
+                    }
+                });
+            } else if (newpwd != conpwd) {
+                Toast.fire({
+                    type: 'error',
+                    title: '密码不一致，请重试！'
+                });
+            } else {
+                Toast.fire({
+                    type: 'error',
+                    title: '密码不能为空！'
+                });
+                {#alert('密码不能为空')#}
+            }
+        });
+        // 删除用户
+        $('#condel').click(function () {
+            $.ajax({
+                url: '{{ url_for('parksys.deluser') }}',
+                type: 'POST',
+                data: row_id,
+                dataType: 'json',
+                success: function (res) {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-center',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    if (res['status'] === 'success') {
+                        $('#closeuser').click();
+                        Toast.fire({
+                            type: 'success',
+                            title: '用户删除成功！'
+                        });
+                        {#$('.swal2-confirm').click(function () {#}
+                        {#    window.location.href = '{{ url_for('parksys.usermanage') }}'#}
+                        //});
+                        setTimeout(function () {
+                            window.location.href = '{{ url_for('parksys.usermanage') }}'
+                        }, 1000);
+                        {#alert('密码重置成功');#}
+                    } else {
+                        $('#closeuser').click();
+                        Toast.fire({
+                            type: 'error',
+                            title: '用户删除失败！'
+                        });
+                    }
+                }
+            });
+        });
+        // 修改用户信息
+        function updateUser() {
+            //alert(row_id);
+            window.location.href = '{{ url_for('parksys.userdetail') }}?user=' + row_id;
         }
         {#    全局搜索变量，查询#}
         var searchkey = '';
@@ -116,7 +263,7 @@
                 searching: false,
                 ordering: false,
                 'bAutoWidth': false,
-                "bProcessing":true, // 显示加载中
+                "bProcessing": true, // 显示加载中
                 "pagingType": "full_numbers",
                 "language": {"url": "{{ url_for('static', filename='plugins/datatables/language.json') }}"},
                 "serverSide": true, //开启服务器模式
@@ -160,56 +307,13 @@
                 columnDefs: [{
                     //   指定第最后一列
                     targets: 6,
-                    render: function(data, type, row, meta) {
-                        return data = '<button class="btn btn-info btn-sm" onclick=updatePwd("'+row.id+'")><i class="fas fa-lock"></i>密码</button>'
-                  + '<button class="btn btn-danger btn-sm" onclick=delUser("'+row.id+'")><i class="far fa-trash-alt"></i>删除</button>' +
-                            '<button class="btn btn-success btn-sm" onclick=editUser("'+row.id+'")> <i class="fas fa-user-edit"></i>编辑</button>';
+                    render: function (data, type, row, meta) {
+                        return data = '<button class="btn btn-info btn-sm" data-toggle="modal" onclick=getRowId("' + row.id + '") data-target="#updatepwd"><i class="fas fa-lock"></i>密码</button>'
+                            + '<button class="btn btn-danger btn-sm" data-toggle="modal" onclick=getRowId("' + row.id + '") data-target="#deluser"><i class="far fa-trash-alt"></i>删除</button>' +
+                            '<button id="updateuser" class="btn btn-success btn-sm" onclick=javascript:getRowId("' + row.id + '");updateUser()> <i class="fas fa-user-edit"></i>编辑</button>';
                     }
                 }]
             });
-
-
-
-            // 绑定删除按钮，删除停车场
-            var delbut = document.querySelector('#delbut');
-            delbut.onclick = function () {
-                if (usercode !== '') {
-                    var con = confirm('确认删除吗？');
-                    console.log('准备删除id: ' + usercode);
-                    console.log('parkcode=' + usercode);
-                    if (con === true) {
-                        $.ajax({
-                            url: '{{ url_for('parksys.delpark') }}',
-                            type: 'POST',
-                            data: usercode,
-                            dataType: 'json',
-                            success: function (res) {
-                                if (res['status'] === 'success') {
-                                    alert('删除成功');
-                                    window.location.href = '{{ url_for('parksys.getpark') }}'
-                                } else {
-                                    alert('删除失败');
-                                }
-                            }
-                        });
-                    } else {
-                        console.log('cancel');
-                    }
-                } else {
-                    alert('请选择要删除的停车场！');
-                }
-            };
-
-            // 跳转到信息修改页面
-            var update = document.querySelector('#update');
-            update.onclick = function () {
-                if (usercode !== '') {
-                    console.log('{{ url_for('parksys.updatepark') }}?parkcode=' + usercode);
-                    window.location.href = '{{ url_for('parksys.updatepark') }}?parkcode=' + usercode;
-                } else {
-                    alert('请选择要修改的停车场！');
-                }
-            }
         };
     </script>
 {% endblock %}

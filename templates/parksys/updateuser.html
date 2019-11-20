@@ -1,0 +1,147 @@
+{% extends 'parksys/base.html' %}
+{% block stylesheet %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/bootstrap-select.css') }}">
+        <!-- SweetAlert2 -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') }}">
+    <!-- Toastr -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/toastr/toastr.min.css') }}">
+{% endblock %}
+{% block contentheader %}
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1 class="m-0 text-dark">用户信息修改</h1>
+        </div><!-- /.col -->
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ url_for('parksys.usermanage') }}">用户信息</a></li>
+                <li class="breadcrumb-item active">用户信息修改</li>
+            </ol>
+        </div><!-- /.col -->
+    </div><!-- /.row -->
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            <div class="card card-info">
+                <form class="form-horizontal" id="UserForm">
+                    {{ userform.csrf_token }}
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="login_name">登录名</label>
+                            {#                            <input type="text" id="inputName" class="form-control" name="inputName">#}
+                            {{ userform.login_name }}
+                        </div>
+                        <div class="form-group">
+                            <label for="nick_name">昵称</label>
+                            {#                            <input type="text" id="inputMobile" class="form-control">#}
+                            {{ userform.nick_name }}
+                        </div>
+                        <div class="form-group">
+                            <label for="roletype">用户角色</label>
+                            {#                            <select class="form-control custom-select" id="inputType">#}
+                            {#                                <option>合作</option>#}
+                            {#                                <option>私人</option>#}
+                            {#                            </select>#}
+                            {{ userform.role_type }}
+                        </div>
+                        <div class="form-group">
+                            <label for="parkrelation">关联停车场</label>
+                            {#                            <input type="text" id="inputMonthlyParking" class="form-control">#}
+                            {{ userform.park_relation }}
+                        </div>
+                        <div class="form-group">
+                            <label for="userremarks">备注</label>
+                            {#                            <textarea id="inputParkRemarks" class="form-control" rows="3"></textarea>#}
+                            {{ userform.user_remarks }}
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+                    <div class="card-footer">
+                        <button type="button" class="btn btn-default float-left"
+                                onclick="window.location.href='{{ url_for('parksys.usermanage') }}'">取消
+                        </button>
+                        <button type="button" class="btn btn-info float-right" id="Submit">确定</button>
+                        <!-- /.card-footer -->
+                </form>
+            </div>
+            <!-- /.card -->
+
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+{% endblock %}
+{% block script %}
+    <script src="{{ url_for('static', filename='dist/js/bootstrap-select.js') }}"></script>
+    <script src="{{ url_for('static', filename='dist/js/bootstrap-select.min.js') }}"></script>
+    <!-- SweetAlert2 -->
+    <script src="{{ url_for('static', filename='plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+    <!-- Toastr -->
+    <script src="{{ url_for('static', filename='plugins/toastr/toastr.min.js') }}"></script>
+    <script>
+        $('input[required]').before('<span style="color:red">*</span>'); // 必填项注释
+
+        $(document).ready(function () {
+            document.getElementById('login_name').value = '{{ user.login_name }}';
+            document.getElementById('nick_name').value = '{{ user.nick_name }}';
+            {#$("#role_type option[value='"+key+"']").attr("selected","selected");#}
+            {% for role in user.roles %}
+                $("#role_type option[value='{{ role.id }}']").attr("selected","selected");
+                {#document.getElementById('role_type').selectedIndex = '{{ role.id }}';#}
+            {% endfor %}
+            {% for park in user.parkinfo %}
+                $("#park_relation option[value='{{ park.id }}']").attr("selected","selected");
+            {% endfor %}
+            {#console.log('{% for role in user.roles %}{{ role.id }}{% endfor %}')#}
+            {#console.log('{% for park in user.parkinfo %}{{ park.id }}{% endfor %}')#}
+        });
+        $('#Submit').click(function() {
+            //var messge = document.getElementById('#Message');
+            //alert(messge);
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-center',
+                showConfirmButton: false,
+                timer: 2000
+            });
+            var user_data = $('#UserForm').serialize();
+            console.log('park_data: ' + user_data);
+            $.ajax({
+                url: '{{ url_for('parksys.userupdate', userid=user.id) }}',
+                type: 'POST',
+                data: user_data,
+                dataType: 'json',
+                success: function (res) {
+                    if (res['status'] === 'success') {
+                        Toast.fire({
+                            type: 'success',
+                            title: '保存成功.'
+                        });
+                        {#alert('保存成功');#}
+                        {#window.location.href='{{ url_for('parksys.usermanage') }}'#}
+                        setTimeout(function () {
+                            window.location.href = '{{ url_for('parksys.usermanage') }}'
+                        }, 1000);
+                    } else if (res['status'] === 'nameerror'){
+                        Toast.fire({
+                            type: 'error',
+                            title: '用户名已存在.'
+                        });
+                    } else if (res['status'] === 'error'){
+                        Toast.fire({
+                            type: 'error',
+                            title: '保存出错，请重试.'
+                        });
+                    } else {
+                        //htmltext= '<span class="help-block">注意</span>';
+                        //formbody.innerHTML = '';
+                        alert(res['message']);
+                        console.log('failed')
+                    }
+                }
+            })
+        })
+
+    </script>
+{% endblock %}
