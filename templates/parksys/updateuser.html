@@ -1,11 +1,6 @@
 {% extends 'parksys/base.html' %}
 {% block stylesheet %}
     <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/bootstrap-select.css') }}">
-        <!-- SweetAlert2 -->
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') }}">
-    <!-- Toastr -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/toastr/toastr.min.css') }}">
 {% endblock %}
 {% block contentheader %}
     <div class="row mb-2">
@@ -75,10 +70,6 @@
 {% block script %}
     <script src="{{ url_for('static', filename='dist/js/bootstrap-select.js') }}"></script>
     <script src="{{ url_for('static', filename='dist/js/bootstrap-select.min.js') }}"></script>
-    <!-- SweetAlert2 -->
-    <script src="{{ url_for('static', filename='plugins/sweetalert2/sweetalert2.min.js') }}"></script>
-    <!-- Toastr -->
-    <script src="{{ url_for('static', filename='plugins/toastr/toastr.min.js') }}"></script>
     <script>
         $('input[required]').before('<span style="color:red">*</span>'); // 必填项注释
 

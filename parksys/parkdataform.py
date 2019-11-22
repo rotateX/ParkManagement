@@ -1,7 +1,7 @@
 # -*- coding : utf-8 -*-
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, DecimalField, SelectField, TextAreaField, SelectMultipleField, PasswordField
+from wtforms import StringField, IntegerField, DecimalField, SelectField, TextAreaField, SelectMultipleField, PasswordField, BooleanField
 from wtforms.validators import DataRequired, Length, EqualTo
 from parksys.models import *
 from  operator import and_
@@ -12,31 +12,52 @@ class LoginForm(FlaskForm):
     """
     loginname = StringField(
         # 登录名
-        validators=[DataRequired("请输入用户名"), Length(min=2, max=50)],
+        validators=[
+            DataRequired("请输入用户名"),
+            Length(min=2, max=50, message='登录名至少2个字符')
+        ],
         render_kw={
             'id': 'loginname',
-            'type': 'text',
             'class': 'form-control',
             'placeholder': '登录名',
         }
     )
     password = PasswordField(
         # 密码
-        validators=[DataRequired("请输入密码"), Length(min=6, max=32)],
+        validators=[
+            DataRequired("请输入密码"),
+            Length(min=1, max=32,message='密码长度1-32位'),
+        ],
         render_kw={
             'id': 'password',
-            'type': 'password',
             'class': 'form-control',
             'placeholder': '密码',
+        },
+
+    )
+    remember = BooleanField(
+        # 记住我
+        render_kw={
+            'id': 'remember'
         }
     )
+    def get_errors(self):
+        errors = ''
+        for v in self.errors.values():
+            for m in v:
+                errors += m
+            errors += '\n'
+        return errors
 
 class SysUserForm(FlaskForm):
     """
     停车场用户表单
     """
     login_name = StringField(  # 昵称
-        validators=[DataRequired("请输入登名"), Length(min=5, max=50)],
+        validators=[
+            DataRequired("请输入登名"),
+            Length(min=5, max=50, message='登录名长度5-50位')
+        ],
         render_kw={
             'id': 'login_name',
             'class': 'form-control',
@@ -45,13 +66,12 @@ class SysUserForm(FlaskForm):
         }
     )
     nick_name = StringField(  # 昵称
-        validators=[Length(min=2, max=20)],
+        validators=[Length(max=20, message='昵称不可超过20个字符')],
         render_kw={
             'id': 'nick_name',
             'class': 'form-control',
             'placeholder': '请输入昵称',
         }
-
     )
 
     role_type = SelectMultipleField(  # 用户类型
@@ -78,7 +98,7 @@ class SysUserForm(FlaskForm):
         # choices=[(0, '公用'), (1, '私人')]
     )
     user_remarks = TextAreaField(
-        validators=[Length(max=255)],
+        validators=[Length(max=255,message='备注长度不可超过255个字符')],
         render_kw={
             'id': 'userremarks',
             'class': 'form-control',
@@ -106,7 +126,10 @@ class ParkDataForm(FlaskForm):
     停车场信息页面表单
     """
     inputName = StringField(  # '停车场名称',
-        validators=[DataRequired("请输入停车场名称"), Length(min=2, max=20)],
+        validators=[
+            DataRequired("请输入停车场名称"),
+            Length(min=2, max=20, message='停车场名称长度2-20个字符')
+        ],
         render_kw={
             'id': 'inputName',
             'class': 'form-control',
@@ -127,7 +150,10 @@ class ParkDataForm(FlaskForm):
         }
     )
     inputAddress = StringField(   # '地址',
-        validators=[DataRequired('请输入停车场地址'), Length(3, 50)],
+        validators=[
+            DataRequired('请输入停车场地址'),
+            Length(3, 50, message='停车场地址长度3-50个字符')
+        ],
         render_kw={
             'id': 'inputAddress',
             'class': 'form-control',
@@ -186,12 +212,14 @@ class ParkDataForm(FlaskForm):
             errors += '\n'
         return errors
 
+
 # 用户添加页面
 class AddUser(SysUserForm):
 
     newpwd = PasswordField(
             validators=[
-                DataRequired("请输入密码！")
+                DataRequired("请输入密码！"),
+                Length(min=6, max=32,message='密码长度6-32位'),
             ],
             render_kw={
                 "id": "newpwd",
@@ -203,7 +231,8 @@ class AddUser(SysUserForm):
     conpwd = PasswordField(
         validators=[
             DataRequired("请输入管理员重复密码！"),
-            EqualTo('newpwd',message="密码不一致！")
+            Length(min=6, max=32, message='密码长度6-32位'),
+            EqualTo('newpwd', message="密码不一致！")
         ],
         render_kw={
             "id": "conpwd",
@@ -212,30 +241,3 @@ class AddUser(SysUserForm):
             "required": "required"
         }
     )
-
-# 修改密码验证表单
-# class PwdUpdate(FlaskForm):
-#
-#     newpwd = PasswordField(
-#         validators=[
-#             DataRequired("请输入密码！")
-#         ],
-#         render_kw={
-#             "id": "newpwd",
-#             "class": "form-control",
-#             "placeholder": "请设置登录密码",
-#             "required": "required"
-#         }
-#     )
-#     repwd = PasswordField(
-#         validators=[
-#             DataRequired("请输入管理员重复密码！"),
-#             EqualTo('newpwd',message="密码不一致！")
-#         ],
-#         render_kw={
-#             "id": "conpwd",
-#             "class": "form-control",
-#             "placeholder": "请再次填写密码！",
-#             "required": "required"
-#         }
-#     )

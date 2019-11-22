@@ -18,11 +18,16 @@
     <link rel="stylesheet" href="{{ url_for('static' , filename='dist/css/adminlte.min.css') }}">
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+        <!-- SweetAlert2 -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') }}">
+    <!-- Toastr -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/toastr/toastr.min.css') }}">
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">
     <div class="login-logo">
-       <b>N</b>ew <b>Park</b>ing
+        <b>N</b>ew <b>Park</b>ing
     </div>
     <!-- /.login-logo -->
     <div class="card">
@@ -31,7 +36,7 @@
             <form id="loginform" method="post">
                 {{ loginform.csrf_token }}
                 <div class="input-group mb-3">
-{#                    <input type="email" class="form-control" placeholder="Email">#}
+                    {#                    <input type="email" class="form-control" placeholder="Email">#}
                     {{ loginform.loginname }}
                     <div class="input-group-append">
                         <div class="input-group-text">
@@ -40,7 +45,7 @@
                     </div>
                 </div>
                 <div class="input-group mb-3">
-{#                    <input type="password" class="form-control" placeholder="Password">#}
+                    {#                    <input type="password" class="form-control" placeholder="Password">#}
                     {{ loginform.password }}
                     <div class="input-group-append">
                         <div class="input-group-text">
@@ -51,7 +56,8 @@
                 <div class="row">
                     <div class="col-8">
                         <div class="icheck-primary">
-                            <input type="checkbox" id="remember">
+                            {{ loginform.remember }}
+                            {#                            <input type="checkbox" id="remember">#}
                             <label for="remember">
                                 记住我
                             </label>
@@ -94,6 +100,61 @@
 <script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <!-- AdminLTE App -->
 <script src="{{ url_for('static', filename='dist/js/adminlte.min.js') }}"></script>
+<!-- SweetAlert2 -->
+<script src="{{ url_for('static', filename='plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+<!-- Toastr -->
+<script src="{{ url_for('static', filename='plugins/toastr/toastr.min.js') }}"></script>
+<script>
+    $('#Submit').click(function () {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-center',
+            showConfirmButton: false,
+            timer: 2000
+        });
+        var user_data = $('#loginform').serialize();
+        console.log('park_data: ' + user_data);
+        $.ajax({
+            url: '{{ url_for('parksys.login') }}',
+            type: 'POST',
+            data: user_data,
+            dataType: 'json',
+            success: function (res) {
+                if (res['status'] === 'success') {
+                    Toast.fire({
+                        type: 'success',
+                        title: '登录成功，正在跳转！'
+                    });
+                    {#alert('保存成功');#}
+                    {#window.location.href='{{ url_for('parksys.usermanage') }}'#}
+                    {#window.location.href = '{{ url_for('parksys.indexpage') }}';#}
+                    setTimeout(function () {
+                        window.location.href = '{{ url_for('parksys.indexpage') }}'
+                    }, 1000);
+                } else if (res['status'] === 'wrong') {
+                    Toast.fire({
+                        type: 'error',
+                        title: '用户不存在或密码不正确.'
+                    });
+                } else if (res['status'] === 'error') {
+                    Toast.fire({
+                        type: 'error',
+                        title: '保存出错，请重试.'
+                    });
+                } else {
+                    //htmltext= '<span class="help-block">注意</span>';
+                    //formbody.innerHTML = '';
+                    Toast.fire({
+                        type: 'error',
+                        title: res['message']
+                    });
+                    {#alert(res['message']);#}
+                    console.log('failed')
+                }
+            }
+        })
+    })
 
+</script>
 </body>
 </html>

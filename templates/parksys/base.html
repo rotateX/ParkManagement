@@ -17,6 +17,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <link rel="stylesheet" href="{{ url_for('static' , filename='dist/css/adminlte.min.css') }}">
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') }}">
+    <!-- Toastr -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/toastr/toastr.min.css') }}">
     {% block stylesheet %}
 
     {% endblock %}
@@ -66,7 +71,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="col-md-1"></div>
                         <div class="col-md-5 col-sm-3 text-center grid">
                             <i class="fa fa-user"></i>
-                            <p><a href="#">个人中心</a></p>
+                            <p><a href ="javascript:return false;" onclick="return false;">个人中心</a></p>
                         </div>
                         <div class="col-md-5 col-sm-3 text-center grid">
                             <i class="fa fa-key"></i>
@@ -78,11 +83,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="col-md-1"></div>
                         <div class="col-md-5 col-sm-3 text-center grid">
                             <i class="fa fa-user-circle"></i>
-                            <p><a href="#">修改头像</a></p>
+                            <p><a href ="javascript:return false;" onclick="return false;">修改头像</a></p>
                         </div>
                         <div class="col-md-5 col-sm-3 text-center grid">
                             <i class="fas fa-question"></i>
-                            <p><a href="#">帮助中心</a></p>
+                            <p><a href ="javascript:return false;" onclick="return false;">帮助中心</a></p>
                         </div>
                         <div class="col-md-1"></div>
                     </div>
@@ -91,7 +96,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="text-center col-md-12">
 {#                            <i class="fa fa-sign-out"></i>#}
                             <i class="fas fa-sign-out-alt"></i>
-                            <a href="{{ url_for('parksys.login') }}">退出登入界面</a>
+                            <a href="{{ url_for('parksys.logout') }}">退出登入界面</a>
                         </div>
                     </div>
                 </div>
@@ -150,7 +155,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
                          class="img-circle elevation-2" alt="User Image">
                 </div>
                 <div class="info">
-                    <a href="#" class="d-block">这是昵称</a>
+                    <a href="#" class="d-block">
+                    {% if current_user.is_authenticated %}
+                        {{ current_user.login_name }}
+                            {% if current_user.nick_name %}
+                                （{{ current_user.nick_name }}）
+                            {% endif %}
+                    {% endif %}
+                    </a>
                 </div>
             </div>
 
@@ -395,6 +407,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <!-- AdminLTE App -->
 <script src="{{ url_for('static', filename='dist/js/adminlte.min.js') }}"></script>
+<!-- SweetAlert2 -->
+<script src="{{ url_for('static', filename='plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+<!-- Toastr -->
+<script src="{{ url_for('static', filename='plugins/toastr/toastr.min.js') }}"></script>
 <script>
     $('.nav-pills').find('a').each(function () {
         if (this.href == document.location.href || document.location.href.search(this.href) >= 0) {
