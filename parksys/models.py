@@ -355,16 +355,27 @@ class SysUser(db.Model, UserMixin):
         )
         return permissions
 
+    # 获取用户菜单
+    @property
+    def menus(self):
+        menus = SysMenu.query.join(sys_role_menu).join(SysRole).join(sys_user_role).join(SysUser).\
+            filter(
+            SysUser.id == self.id
+        ).order_by(SysMenu.order).all()
+        return menus
     # 获取用户停车场
     @property
     def parks(self):
-        parks = ParkInfo.query.join(sys_user_park).join(SysUser).filter(SysUser.id == self.id)
+        parks = ParkInfo.query.join(sys_user_park).join(SysUser).filter(
+            SysUser.id == self.id).order_by(ParkInfo.create_on.desc())
         return parks
 
     # 获取用户停车场过车信息
-    # @property
-    # def cars(self):
-    #     cars = CarInOut.query.join(ParkInfo).join(sys_user_park).join(SysUser.id == self.id)
+    @property
+    def cars(self):
+        cars = CarInOut.query.join(ParkInfo).join(sys_user_park).join(SysUser).filter(
+            SysUser.id == '701bef84-f9ea-4e41-aac3-adcc8247a9d8').order_by(CarInOut.in_time.desc())
+        return cars
 
     # 用户关联
     def getrelation(self, newlist, prelist, sign):
@@ -376,8 +387,8 @@ class SysUser(db.Model, UserMixin):
         """
         if len(newlist)>len(prelist):  # 增加关联
             diffitems = set(newlist).difference(set(prelist))
-            print('打印差异')
-            print(diffitems)
+            # print('打印差异')
+            # print(diffitems)
             for item in diffitems:
                 if sign == 0:
                     diffobj = SysRole.query.get(item)
@@ -412,16 +423,6 @@ class SysUser(db.Model, UserMixin):
         else:
             logger.info('用户<%s>已关联角色关联' % self.login_name)
             return ('无需重复关联')
-
-
-    # 获取用户菜单
-    @property
-    def menus(self):
-        menus = SysMenu.query.join(sys_role_menu).join(SysRole).join(sys_user_role).join(SysUser).\
-            filter(
-            SysUser.id == self.id
-        ).order_by(SysMenu.order).all()
-        return menus
 
 @login_manager.user_loader
 def load_user(user_id):

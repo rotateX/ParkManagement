@@ -2,7 +2,7 @@
 
 from flask import Blueprint
 from flask import Flask, url_for, render_template, redirect, request, flash, jsonify
-from parksys.models import *
+from parksys.models import ParkInfo, ParkingPay, CarInOut, SysUser, SysRole, SysMenu, SysPermission
 from parksys.parkdataform import ParkDataForm, LoginForm, SysUserForm, AddUser
 import json
 import uuid
@@ -11,7 +11,8 @@ import datetime
 import re
 from operator import and_
 from flask_login import login_required, current_user, logout_user, login_user
-from app import load_user
+from exts import db
+
 
 
 logger = Logger(logger='parksys').getlog()
@@ -143,7 +144,7 @@ def newpark():
                 address=address,
                 longitude=longitude,
                 latitude=latitude,
-                create_by='admin',
+                create_by=current_user.login_name,
                 type=int(parktype),
                 monthly_parking_space=monthlyparking,
                 charging_rules=chargingrules,
@@ -273,7 +274,8 @@ def carinout():
             print(str(errstrtime))
 
         # 未过滤记录数
-        recordsTotal = CarInOut.query.filter(
+        cars = current_user.cars
+        recordsTotal = cars.filter(
             CarInOut.in_time <= endtime,
             CarInOut.in_time >= begintime
         ).count()
@@ -282,14 +284,14 @@ def carinout():
             parkobj = ParkInfo.query.filter(ParkInfo.name.like("%" + parkname + "%"))  # 停车场对象
             for park in parkobj:
                 park_list.append(park.id)
-            recordsFiltered = CarInOut.query.filter(
+            recordsFiltered = cars.filter(
                 CarInOut.in_time <= endtime,
                 CarInOut.in_time >= begintime,
                 CarInOut.plate_no.like("%" + carno + "%") if carno is not None else "",
                 CarInOut.park_id.in_(park_list),
             ).count()  # 过滤后的记录
 
-            pagination = CarInOut.query.filter(
+            pagination = cars.filter(
                 CarInOut.in_time <= endtime,
                 CarInOut.in_time >= begintime,
                 CarInOut.plate_no.like("%" + carno + "%") if carno is not None else "",
@@ -298,21 +300,21 @@ def carinout():
                 CarInOut.in_time.desc()).paginate(
                 page=page, per_page=length, error_out=True)
         else:
-            recordsFiltered = CarInOut.query.filter(
+            recordsFiltered = cars.filter(
                 CarInOut.in_time <= endtime,
                 CarInOut.in_time >= begintime,
                 CarInOut.plate_no.like("%" + carno + "%") if carno is not None else "",
             ).count()  # 过滤后的记录
-            pagination = CarInOut.query.filter(
+            pagination = cars.filter(
                 CarInOut.in_time <= endtime,
                 CarInOut.in_time >= begintime,
                 CarInOut.plate_no.like("%" + carno + "%") if carno is not None else "",
             ).order_by(
                 CarInOut.in_time.desc()).paginate(
                 page=page, per_page=length, error_out=True)
-        cars = pagination.items
+        carsitem = pagination.items
         data = []
-        for car in cars:
+        for car in carsitem:
             # print(car.in_time.strftime("%Y-%m-%d %H:%M:%S"))
             if car.out_time:
                 out_time = car.out_time.strftime("%Y-%m-%d %H:%M:%S")
